@@ -715,6 +715,23 @@ export default function Dashboard() {
     }
   };
 
+  const mobileNavItems = [
+    { id: 'tasks', label: 'Chat', icon: '💬' },
+    { id: 'files', label: 'Brief', icon: '📋' },
+    { id: 'skills', label: 'Build', icon: '🔧' },
+    { id: 'preview', label: 'Preview', icon: '👁️' },
+    { id: 'more', label: 'Viac', icon: '⚙️' },
+  ];
+
+  const handleMobileNav = (id: string) => {
+    if (id === 'more') {
+      setMobileMenuOpen(true);
+    } else {
+      setCurrentView(id);
+      setMobileMenuOpen(false);
+    }
+  };
+
   return (
     <div
       className="flex h-screen bg-background overflow-hidden relative"
@@ -730,6 +747,45 @@ export default function Dashboard() {
         onToggleDark={() => setDark(!dark)}
       />
 
+      {/* Mobile sidebar overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="fixed left-0 top-0 bottom-0 w-[280px] z-50 lg:hidden"
+            >
+              <SidebarNav
+                currentView={currentView}
+                onViewChange={(v) => { setCurrentView(v); setMobileMenuOpen(false); }}
+                onNewSession={() => { handleNewSession(); setMobileMenuOpen(false); }}
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                onLoadSession={(s) => { loadSession(s); setMobileMenuOpen(false); }}
+                onDeleteSession={deleteSession}
+                onRenameSession={renameSession}
+                hasPreviewCode={!!latestGeneratedCode}
+                onOpenSettings={() => { setShowSettings(true); setMobileMenuOpen(false); }}
+                userEmail={user.email}
+                onLogout={handleLogout}
+                sessionsLoading={sessionsLoading}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <SidebarNav
           currentView={currentView}
@@ -748,7 +804,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <main className="flex-1 flex flex-col relative overflow-hidden pb-16 lg:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
@@ -762,6 +818,26 @@ export default function Dashboard() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Mobile bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-background border-t-4 border-foreground lg:hidden pb-safe">
+        <div className="flex justify-around items-center">
+          {mobileNavItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleMobileNav(item.id)}
+              className={`flex flex-col items-center justify-center py-2 px-3 touch-target transition-colors ${
+                currentView === item.id
+                  ? 'text-red-600'
+                  : 'text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-[10px] font-black uppercase tracking-wide mt-0.5">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
 
       <SystemMonitor
         isLoading={isLoading}
