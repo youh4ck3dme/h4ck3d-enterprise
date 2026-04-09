@@ -18,8 +18,8 @@ const aliasMap: Record<string, string> = {
 };
 
 export default function DynamicSyntax({ language, children, PreTag = 'div', customStyle }: DynamicSyntaxProps) {
-  const [Syntax, setSyntax] = useState<any>(null);
-  const [style, setStyle] = useState<any>(null);
+  const [Syntax, setSyntax] = useState<React.ElementType | null>(null);
+  const [style, setStyle] = useState<Record<string, React.CSSProperties> | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -67,7 +67,6 @@ export default function DynamicSyntax({ language, children, PreTag = 'div', cust
   }
 
   return (
-    // @ts-ignore - dynamic component
     <Syntax style={style} language={language} PreTag={PreTag} customStyle={customStyle}>
       {children}
     </Syntax>

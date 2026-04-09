@@ -239,7 +239,7 @@ export default function Index() {
     return urls;
   };
 
-  const getSelectedModel = () => localStorage.getItem('ai-model') || 'google/gemini-3-flash-preview';
+  const getSelectedModel = () => localStorage.getItem('ai-model') || 'gpt-5-mini';
 
   const callAIStreaming = async (msgs: Message[], systemOverride?: string): Promise<string> => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -276,6 +276,28 @@ export default function Index() {
 
     setMessages(prev => [...prev, { role: 'model', content: '' }]);
 
+    const extractStreamingText = (payload: unknown): string => {
+      if (!payload || typeof payload !== 'object') return '';
+      const record = payload as Record<string, unknown>;
+
+      // Legacy OpenAI-compatible chat-completions stream shape
+      const choices = Array.isArray(record.choices) ? record.choices : [];
+      const firstChoice = choices[0];
+      if (firstChoice && typeof firstChoice === 'object') {
+        const delta = (firstChoice as { delta?: { content?: unknown } }).delta?.content;
+        if (typeof delta === 'string' && delta.length > 0) {
+          return delta;
+        }
+      }
+
+      // Responses API stream shape
+      if (record.type === 'response.output_text.delta' && typeof record.delta === 'string') {
+        return record.delta;
+      }
+
+      return '';
+    };
+
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -293,7 +315,7 @@ export default function Index() {
           if (jsonStr === '[DONE]') continue;
           try {
             const parsed = JSON.parse(jsonStr);
-            const delta = parsed.choices?.[0]?.delta?.content;
+            const delta = extractStreamingText(parsed);
             if (delta) {
               fullText += delta;
               setMessages(prev => {
@@ -318,7 +340,7 @@ export default function Index() {
           if (jsonStr === '[DONE]') continue;
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
+            const content = extractStreamingText(parsed);
             if (content) {
               fullText += content;
               setMessages(prev => {

@@ -3,11 +3,11 @@ import { Sun, Moon, Cpu } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const AI_MODELS = [
-  { id: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash (rýchly)', desc: 'Vyvážená rýchlosť a kvalita' },
-  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', desc: 'Dobrý multimodálny model' },
-  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', desc: 'Najsilnejší pre komplexné úlohy' },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', desc: 'Nízke náklady, silný výkon' },
-  { id: 'openai/gpt-5', label: 'GPT-5', desc: 'Najvyššia presnosť a nuansa' },
+  { id: 'gpt-5-mini', label: 'GPT-5 Mini', desc: 'Rýchly a nákladovo efektívny' },
+  { id: 'gpt-5', label: 'GPT-5', desc: 'Silný všeobecný model pre kód a analýzu' },
+  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', desc: 'Novšia mini verzia pre rýchle iterácie' },
+  { id: 'gpt-5.4', label: 'GPT-5.4', desc: 'Najvyššia presnosť pre náročné tasky' },
+  { id: 'o4-mini', label: 'o4-mini', desc: 'Rozumový model vhodný na technické úlohy' },
 ];
 
 interface SettingsPanelProps {
@@ -18,7 +18,16 @@ interface SettingsPanelProps {
 }
 
 export default function SettingsPanel({ open, onOpenChange, dark, onToggleDark }: SettingsPanelProps) {
-  const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem('ai-model') || 'google/gemini-3-flash-preview');
+  const [selectedModel, setSelectedModel] = useState(() => {
+    const raw = localStorage.getItem('ai-model') || 'gpt-5-mini';
+    if (raw.startsWith('openai/')) {
+      return raw.slice('openai/'.length);
+    }
+    if (raw.startsWith('google/')) {
+      return 'gpt-5-mini';
+    }
+    return raw;
+  });
 
   useEffect(() => {
     localStorage.setItem('ai-model', selectedModel);
