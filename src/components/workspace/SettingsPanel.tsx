@@ -1,6 +1,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Sun, Moon, Cpu } from 'lucide-react';
+import { Sun, Moon, Cpu, Rocket } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const AI_MODELS = [
   { id: 'gpt-5-mini', label: 'GPT-5 Mini', desc: 'Rýchly a nákladovo efektívny' },
@@ -65,7 +66,7 @@ export default function SettingsPanel({ open, onOpenChange, dark, onToggleDark }
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <Cpu size={16} /> AI Model
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-2 text-left">
               {AI_MODELS.map(model => (
                 <button
                   key={model.id}
@@ -80,6 +81,39 @@ export default function SettingsPanel({ open, onOpenChange, dark, onToggleDark }
                   <div className="text-xs text-muted-foreground mt-0.5">{model.desc}</div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Subscription */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Sun size={16} /> Predplatné
+            </h3>
+            <div className="p-4 rounded-xl border border-border bg-accent/30">
+              <div className="flex justify-between items-center mb-4 text-left">
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Váš plán</div>
+                  <div className="text-lg font-bold text-foreground">Free</div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Rocket size={20} />
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                   const { data: { session } } = await supabase.auth.getSession();
+                   if (!session) return;
+                   const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal`, {
+                     method: 'POST',
+                     headers: { Authorization: `Bearer ${session.access_token}` }
+                   });
+                   const { url } = await res.json();
+                   if (url) window.location.href = url;
+                }}
+                className="w-full py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-all active:scale-95"
+              >
+                Spravovať billing
+              </button>
             </div>
           </div>
 

@@ -10,6 +10,8 @@ import SettingsPanel from '@/components/workspace/SettingsPanel';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { ProjectState } from '@/workflow/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useNavigate } from 'react-router-dom';
 
 // --- Speech Recognition Types ---
 interface SpeechRecognitionErrorEvent extends Event {
@@ -62,9 +64,11 @@ interface Attachment {
   file?: File;
 }
 
-export default function Index() {
+export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const { isPro, loading: subscriptionLoading } = useSubscription();
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('tasks');
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -365,6 +369,18 @@ export default function Index() {
 
   const handleSendMessage = async (textToProcess: string = inputValue) => {
     if (!textToProcess.trim() && attachments.length === 0) return;
+
+    // Subscription Limit Check
+    if (!subscriptionLoading && !isPro && messages.filter(m => m.role === 'user').length >= 5) {
+      toast.error('Dosiahli ste limit pre Free verziu (5 správ). Pre neobmedzený prístup prejdite na PRO.', {
+        action: {
+          label: 'Upgrade teraz',
+          onClick: () => navigate('/pricing')
+        }
+      });
+      navigate('/pricing');
+      return;
+    }
 
     let finalPrompt = textToProcess;
 

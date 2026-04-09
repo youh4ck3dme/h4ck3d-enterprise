@@ -6,118 +6,100 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 13% 13%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 13%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 13%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 217 87% 51%;
+    --primary: 0 72% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 13% 13%;
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 210 16% 93%;
-    --muted-foreground: 215 14% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 20% 96%;
-    --accent-foreground: 220 13% 13%;
+    --accent: 48 96% 53%;
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 4 90% 58%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 52% 46%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 43 96% 56%;
-    --warning-foreground: 220 13% 13%;
+    --warning: 48 96% 51%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 87% 51%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 72% 51%;
 
-    --radius: 0.75rem;
+    --radius: 0px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 217 87% 51%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 0 72% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 87% 97%;
-    --sidebar-accent-foreground: 217 87% 35%;
-    --sidebar-border: 220 13% 93%;
-    --sidebar-ring: 217 87% 51%;
+    --sidebar-accent: 48 96% 90%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 0%;
+    --sidebar-ring: 0 72% 51%;
 
-    /* Custom tokens */
-    --console-bg: 220 26% 14%;
-    --console-header: 220 20% 20%;
-    --console-border: 220 17% 22%;
-    --console-text: 220 9% 76%;
-
-    --google-blue: 217 87% 51%;
-    --google-blue-hover: 211 79% 38%;
-    --google-green: 142 52% 46%;
-    --google-red: 4 90% 58%;
-    --google-yellow: 43 96% 56%;
+    --console-bg: 0 0% 0%;
+    --console-header: 0 0% 10%;
+    --console-border: 0 0% 20%;
+    --console-text: 0 0% 100%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 217 87% 51%;
+    --primary: 0 72% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 48 96% 53%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217 33% 22%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 72% 51%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 142 52% 46%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 43 96% 56%;
-    --warning-foreground: 220 13% 13%;
+    --warning: 48 96% 51%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 217 87% 51%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 72% 51%;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 217 87% 51%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 80%;
+    --sidebar-primary: 0 72% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 217 87% 70%;
-    --sidebar-border: 215 28% 25%;
-    --sidebar-ring: 217 87% 51%;
-
-    --console-bg: 222 47% 7%;
-    --console-header: 222 47% 10%;
-    --console-border: 215 28% 18%;
-    --console-text: 215 20% 65%;
-
-    --google-blue: 217 87% 51%;
-    --google-blue-hover: 211 79% 45%;
-    --google-green: 142 52% 46%;
-    --google-red: 4 90% 58%;
-    --google-yellow: 43 96% 56%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 72% 51%;
+    --sidebar-border: 0 0% 100%;
+    --sidebar-ring: 0 72% 51%;
   }
 }
 
