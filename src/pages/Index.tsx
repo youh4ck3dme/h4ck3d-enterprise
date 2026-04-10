@@ -45,12 +45,11 @@ declare global {
 }
 
 const BriefView = lazy(() => import('@/components/workspace/BriefView'));
-// const AnalyzerView = lazy(() => import('@/components/workspace/AnalyzerView'));
+const AnalyzerView = lazy(() => import('@/components/workspace/AnalyzerView'));
 const BlueprintView = lazy(() => import('@/components/workspace/BlueprintView'));
-// const GeneratorView = lazy(() => import('@/components/workspace/GeneratorView'));
+const GeneratorView = lazy(() => import('@/components/workspace/GeneratorView'));
 const PreviewView = lazy(() => import('@/components/workspace/PreviewView'));
 const RepoEnvView = lazy(() => import('@/components/workspace/RepoEnvView'));
-// const ConnectorsView = lazy(() => import('@/components/workspace/ConnectorsView'));
 
 interface Message {
   role: string;
@@ -656,12 +655,24 @@ export default function Index() {
       case 'connectors':
         return (
           <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading...</div>}>
-            <RepoEnvView 
-              projectState={projectState} 
+            <RepoEnvView
+              projectState={projectState}
               onTransitionState={setProjectState}
               onAddLog={addLog}
               onShowToast={showToast}
             />
+          </Suspense>
+        );
+      case 'analyzer':
+        return (
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading...</div>}>
+            <AnalyzerView onAnalyze={handleAnalyzeLogs} />
+          </Suspense>
+        );
+      case 'generator':
+        return (
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center">Loading...</div>}>
+            <GeneratorView onGenerate={handleGenerateSkill} />
           </Suspense>
         );
       default:

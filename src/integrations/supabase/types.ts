@@ -73,6 +73,114 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          stripe_customer_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          stripe_customer_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          stripe_customer_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          plan_id: string
+          status: string
+          cancel_at_period_end: boolean
+          current_period_end: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          user_id: string
+          plan_id: string
+          status: string
+          cancel_at_period_end?: boolean
+          current_period_end: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_id?: string
+          status?: string
+          cancel_at_period_end?: boolean
+          current_period_end?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      invoices: {
+        Row: {
+          id: string
+          user_id: string
+          amount_total: number
+          currency: string
+          status: string
+          invoice_pdf: string | null
+          hosted_invoice_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          user_id: string
+          amount_total: number
+          currency: string
+          status: string
+          invoice_pdf?: string | null
+          hosted_invoice_url?: string | null
+          created_at: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount_total?: number
+          currency?: string
+          status?: string
+          invoice_pdf?: string | null
+          hosted_invoice_url?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

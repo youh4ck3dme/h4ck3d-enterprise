@@ -1,7 +1,8 @@
 import { ReactNode, useState, useEffect, useMemo } from 'react';
 import {
   Plus, LayoutGrid, ShieldAlert, Code2, Plug, Layout,
-  Settings, History, LogOut, Sun, Moon, Trash2, Search, Pencil, Check, X
+  Settings, History, LogOut, Sun, Moon, Trash2, Search, Pencil, Check, X,
+  ScanSearch, Terminal
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -121,15 +122,10 @@ export default function SidebarNav({
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-            <div className="grid grid-cols-2 gap-0.5">
-              <div className="w-2 h-2 rounded-sm bg-primary-foreground opacity-90" />
-              <div className="w-2 h-2 rounded-sm bg-primary-foreground opacity-60" />
-              <div className="w-2 h-2 rounded-sm bg-primary-foreground opacity-60" />
-              <div className="w-2 h-2 rounded-sm bg-primary-foreground opacity-90" />
-            </div>
+          <div className="w-10 h-10 bg-black border-2 border-white flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(255,10,10,1)]">
+            <div className="text-white font-black text-xs leading-none">H4</div>
           </div>
-          <span className="text-foreground font-bold tracking-tight text-lg">DELIVERY.AI</span>
+          <span className="text-foreground font-black tracking-tighter text-xl uppercase italic">H4CK3D<span className="text-red-600">.AI</span></span>
         </div>
       </div>
 
@@ -149,6 +145,8 @@ export default function SidebarNav({
         <SidebarItem icon={<Plug size={18} />} label="Repo & Env" active={currentView === 'connectors'} status="online" onClick={() => onViewChange('connectors')} />
         <SidebarItem icon={<Code2 size={18} />} label="Blueprint & Orchestration" active={currentView === 'skills'} onClick={() => onViewChange('skills')} />
         <SidebarItem icon={<Layout size={18} />} label="Preview & Test" active={currentView === 'preview'} indicator={hasPreviewCode} onClick={() => onViewChange('preview')} />
+        <SidebarItem icon={<ScanSearch size={18} />} label="Analyzátor Logov" active={currentView === 'analyzer'} onClick={() => onViewChange('analyzer')} />
+        <SidebarItem icon={<Terminal size={18} />} label="Generátor Kódu" active={currentView === 'generator'} onClick={() => onViewChange('generator')} />
 
         {/* Session search */}
         <div className="pt-6 pb-2 px-1">
