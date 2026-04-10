@@ -1,0 +1,1 @@
+- [x] Step 5: Run lint/typecheck (running)

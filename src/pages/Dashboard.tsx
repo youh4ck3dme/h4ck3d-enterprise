@@ -786,7 +786,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:block">
+      <div className="block shrink-0 z-20 relative h-full">
         <SidebarNav
           currentView={currentView}
           onViewChange={setCurrentView}

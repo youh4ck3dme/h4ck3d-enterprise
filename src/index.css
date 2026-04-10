@@ -109,7 +109,6 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    overflow-x: hidden;
   }
 
   * {
@@ -120,8 +119,6 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Google Sans Text', 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    touch-action: manipulation;
-    overscroll-behavior: none;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
