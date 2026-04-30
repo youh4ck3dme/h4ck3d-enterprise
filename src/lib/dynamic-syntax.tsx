@@ -52,7 +52,8 @@ export default function DynamicSyntax({ language, children, PreTag = 'div', cust
         setSyntax(() => Prism);
         setLoaded(true);
       } catch (err) {
-        // ignore load errors
+        if (!mounted) return;
+        setLoaded(true);
       }
     }
 
@@ -63,7 +64,11 @@ export default function DynamicSyntax({ language, children, PreTag = 'div', cust
   }, [language]);
 
   if (!loaded || !Syntax) {
-    return <div className="p-4">Načítavam zvýraznenie...</div>;
+    return (
+      <pre className="overflow-x-auto bg-black p-4 text-[13px] leading-relaxed text-white" style={customStyle}>
+        <code>{children}</code>
+      </pre>
+    );
   }
 
   return (

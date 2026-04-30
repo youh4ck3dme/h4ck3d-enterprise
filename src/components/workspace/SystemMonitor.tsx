@@ -8,6 +8,26 @@ interface SystemMonitorProps {
   logs: string[];
 }
 
+const logProgressColors = [
+  '#ff3b30',
+  '#ff5a1f',
+  '#ff8a00',
+  '#ffb020',
+  '#ffd84d',
+  '#9be15d',
+  '#21c77a',
+];
+
+function getLogProgressColor(index: number, total: number): string {
+  if (total <= 1) return logProgressColors[logProgressColors.length - 1];
+  const progress = index / (total - 1);
+  const colorIndex = Math.min(
+    logProgressColors.length - 1,
+    Math.floor(progress * (logProgressColors.length - 1))
+  );
+  return logProgressColors[colorIndex];
+}
+
 export default function SystemMonitor({ isLoading, messageCount, attachmentCount, logs }: SystemMonitorProps) {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -16,7 +36,7 @@ export default function SystemMonitor({ isLoading, messageCount, attachmentCount
   }, [logs]);
 
   return (
-    <aside className="w-[300px] bg-card border-l border-border flex flex-col hidden xl:flex shrink-0 z-10">
+    <aside className="w-[300px] h-full min-h-0 overflow-hidden bg-card border-l border-border flex flex-col hidden xl:flex shrink-0 z-10">
       <div className="p-6 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Activity size={16} className="text-primary" /> Stav Služieb
@@ -49,7 +69,7 @@ export default function SystemMonitor({ isLoading, messageCount, attachmentCount
       </div>
 
       {/* Console */}
-      <div className="flex-1 flex flex-col bg-console m-4 rounded-xl shadow-inner overflow-hidden border border-console-border">
+      <div className="flex-1 min-h-0 flex flex-col bg-console m-4 rounded-xl shadow-inner overflow-hidden border border-console-border">
         <div className="px-4 py-2 bg-console-header border-b border-console-border flex items-center">
           <span className="text-[10px] font-mono text-console-text uppercase tracking-widest">Cloud Shell</span>
         </div>
@@ -58,13 +78,8 @@ export default function SystemMonitor({ isLoading, messageCount, attachmentCount
             {logs.map((log, i) => (
               <div
                 key={i}
-                className={`mb-1.5 leading-relaxed ${
-                  log.includes('[WARN]') ? 'text-warning'
-                  : log.includes('[ERROR]') ? 'text-destructive'
-                  : log.includes('[API]') ? 'text-primary'
-                  : log.includes('[SYSTEM]') ? 'text-success'
-                  : 'text-console-text'
-                }`}
+                className="mb-1.5 leading-relaxed transition-colors"
+                style={{ color: getLogProgressColor(i, logs.length) }}
               >
                 {log}
               </div>

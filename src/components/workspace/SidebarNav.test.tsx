@@ -34,12 +34,12 @@ describe("SidebarNav", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("link", { name: "Articles" })).toHaveAttribute("href", "/blogmagica");
-    expect(screen.getByRole("link", { name: "New Article" })).toHaveAttribute("href", "/blogmagica/new");
-    expect(screen.getByRole("link", { name: "SEO Briefs" })).toHaveAttribute("href", "/blogmagica/seo");
-    expect(screen.getByRole("link", { name: "Drafts" })).toHaveAttribute("href", "/blogmagica/drafts");
-    expect(screen.getByRole("link", { name: "Published" })).toHaveAttribute("href", "/blogmagica/published");
-    expect(screen.getByRole("link", { name: "Content Calendar" })).toHaveAttribute("href", "/blogmagica/calendar");
+    expect(screen.getByRole("button", { name: /Articles/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /New Article/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /SEO Briefs/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Drafts/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Published/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Content Calendar/ })).toBeInTheDocument();
   });
 
   it("hides logout action in demo mode", () => {

@@ -96,17 +96,19 @@ describe("App routing entry", () => {
     window.history.pushState({}, "", path);
   };
 
-  it("renders dashboard on root without showing login blocker", async () => {
+  it("keeps the original landing page on root without showing login blocker", async () => {
     navigateTo("/");
     render(<App />);
 
-    expect(await screen.findByText("Four prompt builder workflow")).toBeInTheDocument();
+    expect(await screen.findByText("Landing page")).toBeInTheDocument();
     expect(screen.queryByText("Auth screen")).not.toBeInTheDocument();
   });
 
   it("renders builder workflow routes", async () => {
     const routes = [
       ["/builder", "Four prompt builder workflow"],
+      ["/components", "Builder components route"],
+      ["/preview", "Builder preview route"],
       ["/builder/components", "Builder components route"],
       ["/builder/preview", "Builder preview route"],
     ] as const;

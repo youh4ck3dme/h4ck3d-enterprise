@@ -6,13 +6,13 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 38 18% 92%;
     --foreground: 0 0% 0%;
 
-    --card: 0 0% 100%;
+    --card: 40 24% 96%;
     --card-foreground: 0 0% 0%;
 
-    --popover: 0 0% 100%;
+    --popover: 40 24% 96%;
     --popover-foreground: 0 0% 0%;
 
     --primary: 0 72% 51%;
@@ -21,8 +21,8 @@
     --secondary: 48 96% 53%;
     --secondary-foreground: 0 0% 0%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 38 16% 86%;
+    --muted-foreground: 30 8% 38%;
 
     --accent: 48 96% 53%;
     --accent-foreground: 0 0% 0%;
@@ -42,11 +42,11 @@
 
     --radius: 0px;
 
-    --sidebar-background: 0 0% 100%;
+    --sidebar-background: 40 24% 96%;
     --sidebar-foreground: 0 0% 0%;
     --sidebar-primary: 0 72% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 48 96% 90%;
+    --sidebar-accent: 45 82% 88%;
     --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 0 0% 0%;
     --sidebar-ring: 0 72% 51%;
@@ -199,5 +199,13 @@
   }
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;
+  }
+
+  .bg-white {
+    background-color: hsl(40 24% 96%);
+  }
+
+  .hover\:bg-white:hover {
+    background-color: hsl(40 24% 96%);
   }
 }

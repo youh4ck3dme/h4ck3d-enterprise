@@ -13,9 +13,28 @@ const ENTERPRISE_PROMPT = `You are H4CK3D Enterprise, an elite Cyber Security Ar
 SPECIALIZATION: You provide source code that is production-ready, highly optimized, and follows the latest security best practices.
 TONE: Technical, concise, authoritative.
 Language: Respond in Slovak (Slovenčina), but keep all technical terms, code snippets, and CLI commands in English.
-OUTPUT FORMAT: Always use structured Markdown. Use code blocks with language identifiers for syntax highlighting.`;
+OUTPUT FORMAT: Always use structured Markdown. Use code blocks with language identifiers for syntax highlighting.
+GENERATION RULES:
+- If the user asks to generate a landing page, component, UI, section, or frontend asset, return complete usable code first.
+- Prefer these sections: "Výsledok", "Súbory", "Ako použiť", "Ďalšie vylepšenie".
+- For simple landing pages, provide complete index.html, styles.css, and script.js code blocks unless the user asks for React/Tailwind.
+- Use a Master Style Schema mindset: define tokens first, then use those tokens consistently.
+- For every landing page/component answer, include a shared style-manifest.css or styles.css section with :root design tokens and reusable utility classes.
+- Do not use inline styles for generated HTML components. Do not hardcode random colors or pixel values inside HTML attributes.
+- Generated HTML must use reusable token/utility classes such as text-primary, bg-surface, bg-surface-raised, p-md, gap-md, gb-card, and gb-button.
+- Before code, include a short Atomic plan with Atoms, Molecules, and Sections. Keep it brief.
+- Plan components atomically before composing sections: atoms first (buttons, badges, headings, links), then molecules (cards, feature items, CTA blocks), then organisms (hero, pricing, FAQ, footer).
+- Split landing page output into partial files such as Header.html, Features.html, CTA.html, Footer.html when the user asks for a landing page. Each partial must reference the shared style-manifest.css.
+- The first code block for a landing page should be index.html, and it must link to ./style-manifest.css.
+- The second code block for a landing page should be style-manifest.css, and it must define classes including text-primary, bg-surface, bg-surface-raised, p-md, gap-md, gb-card, and gb-button.
+- If WordPress/FSE is requested, include theme.json guidance and WordPress-safe class names instead of inline styles.
+- Do not hide code behind vague instructions. Do not output empty code blocks.
+- Do not include deployment, shell, install, minification, or production-operation commands unless the user explicitly asks for them.
+- Do not claim the result is fully production-ready without context-specific testing.
+- Keep security notes short and practical.`;
 
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+const DEFAULT_MISTRAL_MODEL = "mistral-small-latest";
 
 type ChatMessage = {
   role: string;
@@ -42,6 +61,23 @@ function normalizeModel(rawModel: unknown): string {
 
   if (lower.startsWith("gemini") || lower.startsWith("google")) {
     return DEFAULT_OPENAI_MODEL;
+  }
+
+  return providerAgnostic;
+}
+
+function normalizeMistralModel(rawModel: unknown): string {
+  if (typeof rawModel !== "string" || rawModel.trim().length === 0) {
+    return DEFAULT_MISTRAL_MODEL;
+  }
+
+  const trimmed = rawModel.trim();
+  const providerAgnostic = trimmed.includes("/") ? (trimmed.split("/").pop() ?? trimmed) : trimmed;
+  const lower = providerAgnostic.toLowerCase();
+
+  // UI may still contain OpenAI labels while this function is configured for Mistral.
+  if (lower.startsWith("gpt") || lower.startsWith("o4") || lower.startsWith("openai")) {
+    return DEFAULT_MISTRAL_MODEL;
   }
 
   return providerAgnostic;
@@ -129,14 +165,69 @@ serve(async (req: Request) => {
       });
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
-
     const systemPrompt = systemOverride
       ? ENTERPRISE_PROMPT + "\n" + systemOverride
       : ENTERPRISE_PROMPT;
+
+    const MISTRAL_API_KEY = Deno.env.get("MISTRAL_API_KEY");
+    if (MISTRAL_API_KEY) {
+      const selectedMistralModel = normalizeMistralModel(model);
+      const mistralMessages = [
+        { role: "system", content: systemPrompt },
+        ...conversationMessages.map((message) => ({
+          role: message.role === "assistant" ? "assistant" : "user",
+          content: message.content,
+        })),
+      ];
+
+      const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${MISTRAL_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: selectedMistralModel,
+          stream: true,
+          messages: mistralMessages,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Rate limit exceeded. Skúste to neskôr." }), {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (response.status === 401 || response.status === 403) {
+          return new Response(JSON.stringify({ error: "Mistral API key is invalid or unauthorized for this project/model." }), {
+            status: response.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const errorText = await response.text();
+        console.error("Mistral API error:", response.status, errorText);
+        return new Response(JSON.stringify({ error: "Mistral API error" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("MISTRAL_API_KEY or OPENAI_API_KEY is not configured");
+    }
 
     const selectedModel = normalizeModel(model);
     const mcpTools = buildMcpToolsFromEnv();

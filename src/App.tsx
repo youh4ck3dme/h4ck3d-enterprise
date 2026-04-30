@@ -45,13 +45,14 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<BuilderPage />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/builder" element={<BuilderPage />} />
+              <Route path="/components" element={<BuilderComponentsPage />} />
+              <Route path="/preview" element={<BuilderPreviewPage />} />
               <Route path="/builder/components" element={<BuilderComponentsPage />} />
               <Route path="/builder/preview" element={<BuilderPreviewPage />} />
               <Route path="/auth/login" element={<LoginScreen />} />
-              <Route path="/landing" element={<LandingPage />} />
               <Route path="/blogmagica" element={<Blogmagica />} />
               <Route path="/blogmagica/articles" element={<BlogmagicaArticles />} />
               <Route path="/blogmagica/new" element={<BlogmagicaNew />} />

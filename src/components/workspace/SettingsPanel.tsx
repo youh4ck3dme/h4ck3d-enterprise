@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const AI_MODELS = [
-  { id: 'gpt-5-mini', label: 'GPT-5 Mini', desc: 'Rýchly a nákladovo efektívny' },
-  { id: 'gpt-5', label: 'GPT-5', desc: 'Silný všeobecný model pre kód a analýzu' },
-  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', desc: 'Novšia mini verzia pre rýchle iterácie' },
-  { id: 'gpt-5.4', label: 'GPT-5.4', desc: 'Najvyššia presnosť pre náročné tasky' },
-  { id: 'o4-mini', label: 'o4-mini', desc: 'Rozumový model vhodný na technické úlohy' },
+  { id: 'mistral-small-latest', label: 'Mistral Small', desc: 'Rýchly a nákladovo efektívny demo model' },
+  { id: 'mistral-medium-latest', label: 'Mistral Medium', desc: 'Silnejší model pre kód a analýzu' },
+  { id: 'mistral-large-latest', label: 'Mistral Large', desc: 'Najvyššia presnosť pre náročné tasky' },
 ];
 
 interface SettingsPanelProps {
@@ -22,10 +20,13 @@ export default function SettingsPanel({ open, onOpenChange, dark, onToggleDark }
   const [selectedModel, setSelectedModel] = useState(() => {
     const raw = localStorage.getItem('ai-model') || 'gpt-5-mini';
     if (raw.startsWith('openai/')) {
-      return raw.slice('openai/'.length);
+      return 'mistral-small-latest';
     }
     if (raw.startsWith('google/')) {
-      return 'gpt-5-mini';
+      return 'mistral-small-latest';
+    }
+    if (raw.startsWith('gpt') || raw.startsWith('o4')) {
+      return 'mistral-small-latest';
     }
     return raw;
   });

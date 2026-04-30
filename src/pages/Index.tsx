@@ -241,10 +241,16 @@ export default function Index() {
   const getSelectedModel = () => localStorage.getItem('ai-model') || 'gpt-5-mini';
 
   const callAIStreaming = async (msgs: Message[], systemOverride?: string): Promise<string> => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const url = `https://${projectId}.supabase.co/functions/v1/chat`;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl || /your-|example|placeholder/i.test(supabaseUrl)) {
+      throw new Error('Supabase URL nie je nakonfigurovaná. Skontrolujte VITE_SUPABASE_URL v lokálnom env.');
+    }
+    const url = `${supabaseUrl.replace(/\/$/, '')}/functions/v1/chat`;
     const { data: { session } } = await supabase.auth.getSession();
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!anonKey) {
+      throw new Error('Supabase anon key nie je nakonfigurovaný. Skontrolujte VITE_SUPABASE_ANON_KEY v lokálnom env.');
+    }
 
     const response = await fetch(url, {
       method: 'POST',

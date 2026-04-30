@@ -1,29 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { ReactNode, useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Plus,
-  LayoutGrid,
-  ShieldAlert,
-  Code2,
-  Plug,
-  Layout,
-  Settings,
-  History,
-  LogOut,
-  Sun,
-  Moon,
-  Trash2,
-  Search,
-  Pencil,
-  Check,
-  X,
-  ScanSearch,
-  Terminal,
-  LayoutDashboard,
-  PackageOpen,
-  FileText,
-  Calendar,
-  BookOpen
+  Plus, LayoutGrid, ShieldAlert, Code2, Plug, Layout,
+  Settings, History, LogOut, Sun, Moon, Trash2, Search, Pencil, Check, X,
+  ScanSearch, Terminal
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -141,7 +121,7 @@ export default function SidebarNav({
   };
 
   return (
-    <aside className="w-[280px] bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 z-20">
+    <aside className="w-[280px] h-full min-h-0 overflow-hidden bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 z-20">
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
@@ -161,115 +141,28 @@ export default function SidebarNav({
           <Plus size={18} /> Nová Relácia
         </button>
 
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-2 pb-1">Main</p>
-        <SidebarItem
-          icon={<LayoutDashboard size={18} />}
-          label="Dashboard"
-          active={currentView === 'tasks'}
-          onClick={() => onViewChange('tasks')}
-        />
-        <SidebarItem
-          icon={<Layout size={18} />}
-          label="Builder"
-          active={currentView === 'builder'}
-          onClick={() => navigate('/builder')}
-        />
-        <SidebarItem
-          icon={<PackageOpen size={18} />}
-          label="Components"
-          active={currentView === 'components'}
-          onClick={() => navigate('/builder/components')}
-        />
-        <SidebarItem
-          icon={<LayoutGrid size={18} />}
-          label="Preview"
-          active={currentView === 'builder-preview'}
-          onClick={() => navigate('/builder/preview')}
-          indicator={hasPreviewCode}
-        />
-        <SidebarItem
-          icon={<ScanSearch size={18} />}
-          label="Projects"
-          active={currentView === 'connectors'}
-          onClick={() => onViewChange('connectors')}
-        />
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-2 pb-1">Delivery Pipeline</p>
+
+        <SidebarItem icon={<LayoutGrid size={18} />} label="Discovery & Setup" active={currentView === 'tasks'} onClick={() => onViewChange('tasks')} />
+        <SidebarItem icon={<ShieldAlert size={18} />} label="Brief & Requirements" active={currentView === 'files'} onClick={() => onViewChange('files')} />
+        <SidebarItem icon={<Plug size={18} />} label="Repo & Env" active={currentView === 'connectors'} status="online" onClick={() => onViewChange('connectors')} />
+        <SidebarItem icon={<Code2 size={18} />} label="Blueprint & Orchestration" active={currentView === 'skills'} onClick={() => onViewChange('skills')} />
+        <SidebarItem icon={<Layout size={18} />} label="Preview & Test" active={currentView === 'preview'} indicator={hasPreviewCode} onClick={() => onViewChange('preview')} />
+        <SidebarItem icon={<ScanSearch size={18} />} label="Analyzátor Logov" active={currentView === 'analyzer'} onClick={() => onViewChange('analyzer')} />
+        <SidebarItem icon={<Terminal size={18} />} label="Generátor Kódu" active={currentView === 'generator'} onClick={() => onViewChange('generator')} />
+
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">Builder MVP</p>
+        <SidebarItem icon={<Code2 size={18} />} label="Component Builder" active={currentView === 'builder'} onClick={() => navigate('/builder')} />
+        <SidebarItem icon={<LayoutGrid size={18} />} label="Components" active={currentView === 'components'} onClick={() => navigate('/components')} />
+        <SidebarItem icon={<Layout size={18} />} label="Preview" active={currentView === 'builder-preview'} onClick={() => navigate('/preview')} />
 
         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">BlogMagica</p>
-        <Link
-          to="/blogmagica"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <LayoutGrid size={18} />
-          Articles
-        </Link>
-        <Link
-          to="/blogmagica/new"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <FileText size={18} />
-          New Article
-        </Link>
-        <Link
-          to="/blogmagica/seo"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <BookOpen size={18} />
-          SEO Briefs
-        </Link>
-        <Link
-          to="/blogmagica/drafts"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <FileText size={18} />
-          Drafts
-        </Link>
-        <Link
-          to="/blogmagica/published"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <BookOpen size={18} />
-          Published
-        </Link>
-        <Link
-          to="/blogmagica/calendar"
-          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <Calendar size={18} />
-          Content Calendar
-        </Link>
-
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">System</p>
-        <button
-          onClick={() => onOpenSettings()}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
-            currentView === 'settings'
-              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-              : 'text-sidebar-foreground hover:bg-accent hover:text-foreground'
-          }`}
-        >
-          <Settings size={18} />
-          <span className="flex-1 text-left">Settings</span>
-        </button>
-        <button
-          onClick={() => navigate('/privacy')}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <FileText size={18} />
-          <span className="flex-1 text-left">Docs</span>
-        </button>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-        >
-          <ScanSearch size={18} />
-          <span className="flex-1 text-left">Diagnostics</span>
-        </button>
-
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">Legacy Tools</p>
-        <SidebarItem icon={<ShieldAlert size={18} />} label="Brief & Requirements" active={currentView === 'files'} onClick={() => onViewChange('files')} />
-        <SidebarItem icon={<Code2 size={18} />} label="Blueprint & Orchestration" active={currentView === 'skills'} onClick={() => onViewChange('skills')} />
-        <SidebarItem icon={<Terminal size={18} />} label="Analyzátor Logov" active={currentView === 'analyzer'} onClick={() => onViewChange('analyzer')} />
-        <SidebarItem icon={<Terminal size={18} />} label="Generátor Kódu" active={currentView === 'generator'} onClick={() => onViewChange('generator')} />
+        <SidebarItem icon={<LayoutGrid size={18} />} label="Articles" active={false} onClick={() => navigate('/blogmagica')} />
+        <SidebarItem icon={<Code2 size={18} />} label="New Article" active={false} onClick={() => navigate('/blogmagica/new')} />
+        <SidebarItem icon={<ShieldAlert size={18} />} label="SEO Briefs" active={false} onClick={() => navigate('/blogmagica/seo')} />
+        <SidebarItem icon={<History size={18} />} label="Drafts" active={false} onClick={() => navigate('/blogmagica/drafts')} />
+        <SidebarItem icon={<Layout size={18} />} label="Published" active={false} onClick={() => navigate('/blogmagica/published')} />
+        <SidebarItem icon={<ScanSearch size={18} />} label="Content Calendar" active={false} onClick={() => navigate('/blogmagica/calendar')} />
 
         {/* Session search */}
         <div className="pt-6 pb-2 px-1">
@@ -384,24 +277,17 @@ export default function SidebarNav({
           onClick={onOpenSettings}
           className="flex items-center justify-between p-2 rounded-xl hover:bg-accent transition-colors cursor-pointer w-full"
         >
-          {isDemoMode ? (
-            <div className="text-left">
-              <div className="text-sm font-medium text-foreground">Demo/Admin Mode</div>
-              <div className="text-[11px] text-muted-foreground">Guest workspace active</div>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+            {isDemoMode ? 'D' : userEmail ? userEmail[0].toUpperCase() : 'U'}
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-medium text-foreground truncate max-w-[160px]">
+              {isDemoMode ? 'Demo/Admin Mode' : userEmail || 'Používateľ'}
             </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                {userEmail ? userEmail[0].toUpperCase() : 'U'}
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-medium text-foreground truncate max-w-[160px]">
-                  {userEmail || 'Používateľ'}
-                </div>
-                <div className="text-[11px] text-success">Online</div>
-              </div>
-            </div>
-          )}
+            <div className="text-[11px] text-success">{isDemoMode ? 'Guest workspace' : 'Online'}</div>
+          </div>
+        </div>
           <Settings size={16} className="text-muted-foreground" />
         </button>
       </div>

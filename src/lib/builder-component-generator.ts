@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  ATOMIC_COMPONENT_PLAN,
+  buildCssManifest,
+  buildWordPressThemeJson,
+  tokenContractWarning,
+} from "./design-token-contract";
 
 export const BUILDER_WORKFLOW_STORAGE_KEY = "builder-workflow:last-result";
 
@@ -39,6 +45,11 @@ export const BuilderOutputSchema = z.object({
   target: z.enum(["react", "wordpress", "html"]),
   style: z.string().min(2),
   sections: z.array(BuilderSectionSchema).max(12),
+  atomicPlan: z.object({
+    atoms: z.array(z.string()),
+    molecules: z.array(z.string()),
+    organisms: z.array(z.string()),
+  }),
   warnings: z.array(z.string()),
 });
 
@@ -59,6 +70,9 @@ export const BuilderGenerationResultSchema = z.object({
     tailwindReact: z.string(),
     html: z.string(),
     wordpressHtml: z.string(),
+    partials: z.record(z.string()),
+    cssManifest: z.string(),
+    wordpressThemeJson: z.string(),
     json: z.string(),
   }),
   error: z.string().optional(),
@@ -299,14 +313,14 @@ function orderedSectionJsx(
       const listItems = (section.items ?? [])
         .map((item) => `    <li key="${escapeTs(`${index}-${item}`)}">${escapeTs(item)}</li>`)
         .join("\n");
-      const baseClass = asWordpress ? `${WORDPRESS_CLASS_PREFIX}${section.type}` : "space-y-2";
+      const baseClass = asWordpress ? `${WORDPRESS_CLASS_PREFIX}${section.type}` : "gb-card gb-stack bg-surface-raised border-ink p-md";
 
       return `
-        <section className="${asWordpress ? "" : baseClass}">
-          <h2>${escapeTs(section.headline)}</h2>
-          <p>${escapeTs(section.subheadline)}</p>
+        <section className="${asWordpress ? "" : baseClass}" data-component="${section.type}">
+          <h2 className="text-primary">${escapeTs(section.headline)}</h2>
+          <p className="text-muted">${escapeTs(section.subheadline)}</p>
           ${listItems ? `<ul>${listItems}</ul>` : ""}
-          ${section.primaryCta ? `<a href="#">${escapeTs(section.primaryCta)}</a>` : ""}
+          ${section.primaryCta ? `<a href="#" className="gb-button">${escapeTs(section.primaryCta)}</a>` : ""}
         </section>`.trim();
     })
     .join("\n");
@@ -314,14 +328,14 @@ function orderedSectionJsx(
   const sectionRenderTailwind = sections
     .map((section, index) => {
       const listItems = (section.items ?? [])
-        .map((item) => `      <li className="text-sm text-slate-200" key={"${escapeTs(`${index}-${item}`)}"}>${escapeTs(item)}</li>`)
+        .map((item) => `      <li className="text-sm text-ink" key={"${escapeTs(`${index}-${item}`)}"}>${escapeTs(item)}</li>`)
         .join("\n");
 
       return `
-        <section className="rounded-2xl border border-slate-700/60 bg-slate-900/60 p-4">
-          <h2 className="text-2xl font-semibold text-cyan-100">${escapeTs(section.headline)}</h2>
-          <p className="mt-2 text-sm text-slate-300">${escapeTs(section.subheadline)}</p>
-          ${listItems ? `<ul className="mt-4 grid gap-2">${listItems}\n        </ul>` : ""}
+        <section className="gb-card gb-stack bg-surface-raised border-ink p-md" data-component="${section.type}">
+          <h2 className="text-primary">${escapeTs(section.headline)}</h2>
+          <p className="text-muted">${escapeTs(section.subheadline)}</p>
+          ${listItems ? `<ul className="gb-stack gap-md">${listItems}\n        </ul>` : ""}
         </section>`.trim();
     })
     .join("\n");
@@ -329,9 +343,9 @@ function orderedSectionJsx(
   const htmlRender = sections
     .map(
       (section) =>
-        `<section>
-          <h2>${escapeHtml(section.headline)}</h2>
-          <p>${escapeHtml(section.subheadline)}</p>
+        `<section class="gb-card gb-stack bg-surface-raised border-ink p-md" data-component="${escapeHtml(section.type)}">
+          <h2 class="text-primary">${escapeHtml(section.headline)}</h2>
+          <p class="text-muted">${escapeHtml(section.subheadline)}</p>
           ${section.items && section.items.length ? `<ul>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
         </section>`,
     )
@@ -365,9 +379,9 @@ export const GeneratedBuilderComponent: FC<BuilderComponentProps> = ({
     <main className={className}>
       <h1>${escapeTs(title)}</h1>
       {sections.map((section) => (
-        <section key={section.headline} className="section-block">
-          <h2>{section.headline}</h2>
-          <p>{section.subheadline}</p>
+        <section key={section.headline} className="gb-card gb-stack bg-surface-raised border-ink p-md" data-component={section.type}>
+          <h2 className="text-primary">{section.headline}</h2>
+          <p className="text-muted">{section.subheadline}</p>
           {section.items?.length ? (
             <ul>
               {section.items.map((item) => (
@@ -375,7 +389,7 @@ export const GeneratedBuilderComponent: FC<BuilderComponentProps> = ({
               ))}
             </ul>
           ) : null}
-          {section.primaryCta ? <a href="#">{section.primaryCta}</a> : null}
+          {section.primaryCta ? <a href="#" className="gb-button">{section.primaryCta}</a> : null}
         </section>
       ))}
     </main>
@@ -414,8 +428,8 @@ export const GeneratedBuilderTailwind: FC<GeneratedBuilderTailwindProps> = ({
   const list = sections;
   return (
     <main className={className}>
-      <h1 className="text-4xl font-semibold text-cyan-100">${escapeTs(title)}</h1>
-      <div className="space-y-4">${rendered}\n      </div>
+      <h1 className="text-primary">${escapeTs(title)}</h1>
+      <div className="gb-stack gap-md">${rendered}\n      </div>
     </main>
   );
 };
@@ -428,22 +442,52 @@ function renderPlainHtml(title: string, sections: BuilderSection[]): string {
   const rendered = orderedSectionJsx(sections).html;
   return `<!doctype html>
 <html>
+  <head>
+    <link rel="stylesheet" href="./style-manifest.css" />
+  </head>
   <body>
-    <main>
-      <h2>${escapeHtml(title)}</h2>
+    <main class="bg-surface p-md">
+      <h2 class="text-primary">${escapeHtml(title)}</h2>
       ${rendered}
     </main>
   </body>
 </html>`;
 }
 
+function renderHtmlPartial(name: string, sections: BuilderSection[]): string {
+  const rendered = orderedSectionJsx(sections).html;
+  return `<!-- ${name}: generated from Master Style Schema. Requires style-manifest.css. -->
+<link rel="stylesheet" href="./style-manifest.css" />
+${rendered}`;
+}
+
+function renderHtmlPartials(sections: BuilderSection[]): Record<string, string> {
+  const headerSection = sections.find((section) => section.type === "hero") ?? sections[0];
+  const footerSection =
+    sections.find((section) => section.type === "cta") ??
+    sections.find((section) => section.type === "faq") ??
+    sections[sections.length - 1];
+  const middleSections = sections.filter(
+    (section) => section !== headerSection && section !== footerSection,
+  );
+
+  return {
+    "Header.html": renderHtmlPartial("Header.html", headerSection ? [headerSection] : []),
+    "Features.html": renderHtmlPartial(
+      "Features.html",
+      middleSections.length > 0 ? middleSections : sections.slice(0, 3),
+    ),
+    "Footer.html": renderHtmlPartial("Footer.html", footerSection ? [footerSection] : []),
+  };
+}
+
 function renderWordPressSafeHtml(title: string, sections: BuilderSection[]): string {
   const list = sections
     .map(
       (section) => `
-        <section class="${WORDPRESS_CLASS_PREFIX}${section.type}">
-          <h2 class="${WORDPRESS_CLASS_PREFIX}heading">${escapeHtml(section.headline)}</h2>
-          <p class="${WORDPRESS_CLASS_PREFIX}text">${escapeHtml(section.subheadline)}</p>
+        <section class="${WORDPRESS_CLASS_PREFIX}${section.type} ${WORDPRESS_CLASS_PREFIX}card ${WORDPRESS_CLASS_PREFIX}bg-surface-raised ${WORDPRESS_CLASS_PREFIX}border-ink ${WORDPRESS_CLASS_PREFIX}p-md">
+          <h2 class="${WORDPRESS_CLASS_PREFIX}heading ${WORDPRESS_CLASS_PREFIX}text-primary">${escapeHtml(section.headline)}</h2>
+          <p class="${WORDPRESS_CLASS_PREFIX}text ${WORDPRESS_CLASS_PREFIX}text-muted">${escapeHtml(section.subheadline)}</p>
           ${section.items?.length ? `<ul>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
           ${section.primaryCta ? `<p><a href="#" class="${WORDPRESS_CLASS_PREFIX}cta">${escapeHtml(section.primaryCta)}</a></p>` : ""}
         </section>`.trim(),
@@ -505,6 +549,7 @@ export function generateBuilderDraft(input: BuilderPromptInput): BuilderGenerati
         target: "html",
         style: sanitizePrompt(validatedInput.stylePrompt) || "dark SaaS",
         sections: [],
+        atomicPlan: ATOMIC_COMPONENT_PLAN,
         warnings: errors,
       },
       outputs: {
@@ -512,6 +557,13 @@ export function generateBuilderDraft(input: BuilderPromptInput): BuilderGenerati
         tailwindReact: "",
         html: "",
         wordpressHtml: "",
+        partials: {
+          "Header.html": "",
+          "Features.html": "",
+          "Footer.html": "",
+        },
+        cssManifest: buildCssManifest(),
+        wordpressThemeJson: buildWordPressThemeJson(),
         json: "",
       },
       error: errors.join(" "),
@@ -537,11 +589,16 @@ export function generateBuilderDraft(input: BuilderPromptInput): BuilderGenerati
     target: "react",
     style: normalized.stylePrompt,
     sections,
-    warnings: ["Výstup bol vygenerovaný ako lokálny deterministic draft."],
+    atomicPlan: ATOMIC_COMPONENT_PLAN,
+    warnings: [
+      "Výstup bol vygenerovaný ako lokálny deterministic draft.",
+      tokenContractWarning(),
+    ],
   };
 
   const parsed = BuilderOutputSchema.parse(output);
   const wpOutput = renderWordPressSafeHtml(parsed.title, parsed.sections);
+  const partials = renderHtmlPartials(parsed.sections);
   if (!isSafeWordPressOutput(wpOutput)) {
     return {
       valid: false,
@@ -553,6 +610,9 @@ export function generateBuilderDraft(input: BuilderPromptInput): BuilderGenerati
         tailwindReact: "",
         html: renderPlainHtml(parsed.title, parsed.sections),
         wordpressHtml: wpOutput,
+        partials,
+        cssManifest: buildCssManifest(),
+        wordpressThemeJson: buildWordPressThemeJson(),
         json: JSON.stringify(parsed, null, 2),
       },
       error: "Výstup neprešiel WordPress bezpečnostnou validáciou.",
@@ -571,6 +631,9 @@ export function generateBuilderDraft(input: BuilderPromptInput): BuilderGenerati
       tailwindReact: renderTailwindComponent(parsed.sections, parsed.title),
       html: renderPlainHtml(parsed.title, parsed.sections),
       wordpressHtml: wpOutput,
+      partials,
+      cssManifest: buildCssManifest(),
+      wordpressThemeJson: buildWordPressThemeJson(),
       json,
     },
   };

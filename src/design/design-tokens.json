@@ -1,0 +1,105 @@
+{
+  "name": "H4CK3D Builder Master Style Schema",
+  "version": "1.0.0",
+  "colors": {
+    "primary": {
+      "hex": "#e9252a",
+      "hsl": "358 82% 53%",
+      "usage": "Primary CTA, active navigation, critical interaction"
+    },
+    "secondary": {
+      "hex": "#f5c84c",
+      "hsl": "44 89% 63%",
+      "usage": "Accent panels, highlights, selected states"
+    },
+    "surface": {
+      "hex": "#f4efe6",
+      "hsl": "39 39% 93%",
+      "usage": "Editor-like warm workspace background"
+    },
+    "surfaceRaised": {
+      "hex": "#fbf7ef",
+      "hsl": "40 60% 96%",
+      "usage": "Cards, component surfaces, dialogs"
+    },
+    "ink": {
+      "hex": "#080808",
+      "hsl": "0 0% 3%",
+      "usage": "Text, hard borders, strong contrast"
+    },
+    "muted": {
+      "hex": "#71685e",
+      "hsl": "32 9% 41%",
+      "usage": "Secondary copy and helper text"
+    },
+    "success": {
+      "hex": "#21c77a",
+      "hsl": "152 71% 45%",
+      "usage": "Validated, passed, safe states"
+    },
+    "warning": {
+      "hex": "#ffb020",
+      "hsl": "39 100% 56%",
+      "usage": "Needs review, caution, pending state"
+    },
+    "error": {
+      "hex": "#ff3b30",
+      "hsl": "3 100% 59%",
+      "usage": "Blocked, invalid, destructive warning"
+    }
+  },
+  "typography": {
+    "fontFamily": {
+      "sans": "Google Sans Text, Google Sans, system-ui, sans-serif",
+      "display": "Google Sans, system-ui, sans-serif",
+      "mono": "JetBrains Mono, Fira Code, monospace"
+    },
+    "basePx": 16,
+    "ratio": 1.25,
+    "scale": {
+      "xs": "0.64rem",
+      "sm": "0.8rem",
+      "base": "1rem",
+      "md": "1.25rem",
+      "lg": "1.5625rem",
+      "xl": "1.953rem",
+      "xxl": "2.441rem"
+    }
+  },
+  "spacing": {
+    "unitPx": 4,
+    "scale": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px",
+      "xxl": "48px"
+    }
+  },
+  "radii": {
+    "none": "0px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px"
+  },
+  "classContract": {
+    "requiredUtilities": [
+      "text-primary",
+      "text-muted",
+      "bg-surface",
+      "bg-surface-raised",
+      "border-ink",
+      "p-md",
+      "gap-md"
+    ],
+    "wordpressPrefix": "gb-wp-",
+    "forbidden": [
+      "inline-style",
+      "hardcoded-color",
+      "hardcoded-pixel-spacing",
+      "script-tag",
+      "style-tag"
+    ]
+  }
+}

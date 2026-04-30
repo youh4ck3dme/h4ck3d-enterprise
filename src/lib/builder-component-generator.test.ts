@@ -34,14 +34,33 @@ describe("builder component generator", () => {
     expect(result.outputs.tailwindReact).toContain("GeneratedBuilderTailwind");
     expect(result.outputs.html).toContain("<!doctype html>");
     expect(result.outputs.json).toContain("feature-grid");
+    expect(result.outputs.partials["Header.html"]).toContain("style-manifest.css");
+    expect(result.outputs.partials["Features.html"]).toContain("style-manifest.css");
+    expect(result.outputs.partials["Footer.html"]).toContain("style-manifest.css");
+    expect(result.outputs.cssManifest).toContain("--gb-primary");
+    expect(result.outputs.wordpressThemeJson).toContain("theme.json");
+    expect(result.schema.atomicPlan.atoms).toContain("button");
   });
 
   it("generates WordPress-safe HTML without forbidden tags or handlers", () => {
     const result = generateBuilderDraft(validInput);
 
     expect(result.outputs.wordpressHtml).toContain("gb-wp-");
+    expect(result.outputs.wordpressHtml).toContain("gb-wp-card");
     expect(result.outputs.wordpressHtml).not.toMatch(/<script|<style|<iframe|<form|<input/i);
     expect(result.outputs.wordpressHtml).not.toMatch(/\son\w+=|javascript:/i);
+  });
+
+  it("uses design-token classes instead of inline styles in generated component exports", () => {
+    const result = generateBuilderDraft(validInput);
+
+    expect(result.outputs.react).toContain("text-primary");
+    expect(result.outputs.react).toContain("p-md");
+    expect(result.outputs.html).toContain("style-manifest.css");
+    expect(result.outputs.html).toContain("bg-surface");
+    expect(result.outputs.partials["Header.html"]).toContain("bg-surface-raised");
+    expect(result.outputs.react).not.toMatch(/style=\{\{|#[0-9a-f]{3,8}|rgba?\(/i);
+    expect(result.outputs.html).not.toMatch(/\sstyle=|#[0-9a-f]{3,8}|rgba?\(/i);
   });
 
   it("rejects dangerous requests safely", () => {
@@ -66,6 +85,8 @@ describe("builder component generator", () => {
     expect(result.valid).toBe(true);
     expect(result.schema.style).toBe("dark SaaS");
     expect(result.schema.sections.map((section) => section.type)).toEqual(["hero", "feature-grid", "cta"]);
+    expect(result.schema.warnings).toContain(
+      "Master Style Schema active: komponenty používajú tokenové triedy, nie inline farby alebo pixelové štýly.",
+    );
   });
 });
-

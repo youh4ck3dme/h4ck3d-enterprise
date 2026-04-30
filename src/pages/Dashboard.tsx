@@ -52,6 +52,11 @@ const GeneratorView = lazy(() => import('@/components/workspace/GeneratorView'))
 const PreviewView = lazy(() => import('@/components/workspace/PreviewView'));
 const RepoEnvView = lazy(() => import('@/components/workspace/RepoEnvView'));
 
+const isAuthFlowDisabled = (() => {
+  const value = import.meta.env.VITE_AUTH_DISABLED;
+  return value === undefined || value === '' || value.toLowerCase() === 'true' || value === '1';
+})();
+
 interface Message {
   role: string;
   content: string;
@@ -63,15 +68,8 @@ interface Attachment {
   file?: File;
 }
 
-type DashboardUser = Pick<User, "id" | "email">;
-
-const isAuthFlowDisabled = (() => {
-  const value = import.meta.env.VITE_AUTH_DISABLED;
-  return value === undefined || value === '' || value.toLowerCase() === 'true' || value === '1';
-})();
-
 export default function Dashboard() {
-  const [user, setUser] = useState<DashboardUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(isAuthFlowDisabled);
   const { isPro, loading: subscriptionLoading } = useSubscription();
@@ -266,10 +264,16 @@ export default function Dashboard() {
   const getSelectedModel = () => localStorage.getItem('ai-model') || 'gpt-5-mini';
 
   const callAIStreaming = async (msgs: Message[], systemOverride?: string): Promise<string> => {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const url = `https://${projectId}.supabase.co/functions/v1/chat`;
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl || /your-|example|placeholder/i.test(supabaseUrl)) {
+      throw new Error('Supabase URL nie je nakonfigurovaná. Skontrolujte VITE_SUPABASE_URL v lokálnom env.');
+    }
+    const url = `${supabaseUrl.replace(/\/$/, '')}/functions/v1/chat`;
     const session = isAuthFlowDisabled ? null : (await supabase.auth.getSession()).data.session;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!anonKey) {
+      throw new Error('Supabase anon key nie je nakonfigurovaný. Skontrolujte VITE_SUPABASE_ANON_KEY v lokálnom env.');
+    }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -652,10 +656,8 @@ export default function Dashboard() {
     );
   }
 
-  const dashboardStatusLabel = isDemoMode ? "Demo/Admin Mode" : "Authenticated";
-  const effectiveUser = isDemoMode ? null : user;
-
   const tokenCount = messages.length > 0 ? (8.1 + messages.length * 0.3).toFixed(1) : '8.1';
+  const effectiveUserEmail = isDemoMode ? undefined : user?.email;
 
   const viewContent = () => {
     switch (currentView) {
@@ -762,7 +764,7 @@ export default function Dashboard() {
 
   return (
     <div
-      className="flex h-screen bg-background overflow-hidden relative"
+      className="flex h-screen min-h-0 bg-background overflow-hidden relative"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -804,7 +806,7 @@ export default function Dashboard() {
                 onRenameSession={renameSession}
                 hasPreviewCode={!!latestGeneratedCode}
                 onOpenSettings={() => { setShowSettings(true); setMobileMenuOpen(false); }}
-                userEmail={effectiveUser?.email}
+                userEmail={effectiveUserEmail}
                 onLogout={isAuthFlowDisabled || isDemoMode ? undefined : handleLogout}
                 isDemoMode={isDemoMode}
                 sessionsLoading={sessionsLoading}
@@ -815,7 +817,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <div className="block shrink-0 z-20 relative h-full">
+      <div className="block shrink-0 z-20 relative h-full min-h-0">
         <SidebarNav
           currentView={currentView}
           onViewChange={setCurrentView}
@@ -827,31 +829,14 @@ export default function Dashboard() {
           onRenameSession={renameSession}
           hasPreviewCode={!!latestGeneratedCode}
           onOpenSettings={() => setShowSettings(true)}
-          userEmail={effectiveUser?.email}
+          userEmail={effectiveUserEmail}
           onLogout={isAuthFlowDisabled || isDemoMode ? undefined : handleLogout}
           isDemoMode={isDemoMode}
           sessionsLoading={sessionsLoading}
         />
       </div>
 
-      <main className="flex-1 flex flex-col relative overflow-hidden pb-16 lg:pb-0">
-        <div className="border-b border-[#273043] bg-[#11141b]/95 px-5 py-3 backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#9aa7bd]">Builder Dashboard</p>
-              <p className="text-sm text-[#e9edf5]">Direct admin workspace</p>
-            </div>
-            {isDemoMode ? (
-              <span className="inline-flex items-center rounded-full border border-[#00d1b2]/35 bg-[#00d1b2]/10 px-3 py-1 text-xs font-medium text-[#9dfbe8]">
-                Demo/Admin Mode
-              </span>
-            ) : (
-              <span className="inline-flex items-center rounded-full border border-[#3aa0ff]/35 bg-[#3aa0ff]/10 px-3 py-1 text-xs font-medium text-[#b9dfff]">
-                {dashboardStatusLabel}
-              </span>
-            )}
-          </div>
-        </div>
+      <main className="flex-1 min-w-0 min-h-0 flex flex-col relative overflow-hidden pb-16 lg:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
@@ -859,7 +844,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 min-h-0 flex flex-col"
           >
             {viewContent()}
           </motion.div>
@@ -895,5 +880,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-

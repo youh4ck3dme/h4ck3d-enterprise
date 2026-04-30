@@ -2,18 +2,18 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
-  test('should navigate to landing page and show the login button', async ({ page }) => {
+  test('opens the original landing page and enters dashboard without OAuth blocker', async ({ page }) => {
     await page.goto('/');
-    
-    // Check if branding is present
-    await expect(page.getByText('H4CK3D ENTERPRISE')).toBeVisible();
-    
-    // Check for Access button
-    const accessButton = page.getByRole('button', { name: 'Vstúpiť do App' });
+
+    await expect(page.getByRole('navigation').getByText('H4CK3D')).toBeVisible();
+    await expect(page.getByRole('navigation').getByText('ENTERPRISE')).toBeVisible();
+
+    const accessButton = page.getByRole('button', { name: 'Vstúpiť do App' }).first();
     await expect(accessButton).toBeVisible();
-    
-    // Navigate to dashboard (which might trigger login logic)
+
     await accessButton.click();
     await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page.getByText('Continue with Google')).toHaveCount(0);
+    await expect(page.getByText('Continue with GitHub')).toHaveCount(0);
   });
 });

@@ -1,0 +1,6 @@
+:root { --gb-primary: #e9252a; --gb-surface: #f4efe6; --gb-ink: #080808; }
+.gb-wp-card { border: 4px solid var(--gb-ink); }
+.gb-wp-text-primary { color: var(--gb-primary); }
+.gb-wp-bg-surface-raised { background: #fbf7ef; }
+.gb-wp-p-md { padding: 16px; }
+.gb-wp-text-muted { color: #71685e; }

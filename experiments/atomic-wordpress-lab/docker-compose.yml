@@ -1,0 +1,58 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: atomic-lab-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: atomic_lab
+      MYSQL_USER: atomic
+      MYSQL_PASSWORD: ${ATOMIC_LAB_MYSQL_PASSWORD:-change-me-local-only}
+      MYSQL_ROOT_PASSWORD: ${ATOMIC_LAB_MYSQL_ROOT_PASSWORD:-change-me-local-only}
+    volumes:
+      - atomic_lab_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    image: wordpress:latest
+    container_name: atomic-lab-wordpress
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: atomic_lab
+      WORDPRESS_DB_USER: atomic
+      WORDPRESS_DB_PASSWORD: ${ATOMIC_LAB_MYSQL_PASSWORD:-change-me-local-only}
+    volumes:
+      - atomic_lab_wordpress_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+
+  wpcli:
+    image: wordpress:cli
+    container_name: atomic-lab-wpcli
+    depends_on:
+      mysql:
+        condition: service_healthy
+      wordpress:
+        condition: service_started
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: atomic_lab
+      WORDPRESS_DB_USER: atomic
+      WORDPRESS_DB_PASSWORD: ${ATOMIC_LAB_MYSQL_PASSWORD:-change-me-local-only}
+    volumes:
+      - atomic_lab_wordpress_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+    working_dir: /var/www/html
+    entrypoint: ["wp"]
+
+volumes:
+  atomic_lab_mysql_data:
+  atomic_lab_wordpress_data:
