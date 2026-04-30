@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import LoginScreen from '@/components/LoginScreen';
 import SidebarNav, { Session } from '@/components/workspace/SidebarNav';
 import SystemMonitor from '@/components/workspace/SystemMonitor';
 import ChatView from '@/components/workspace/ChatView';
@@ -64,9 +63,17 @@ interface Attachment {
   file?: File;
 }
 
+type DashboardUser = Pick<User, "id" | "email">;
+
+const isAuthFlowDisabled = (() => {
+  const value = import.meta.env.VITE_AUTH_DISABLED;
+  return value === undefined || value === '' || value.toLowerCase() === 'true' || value === '1';
+})();
+
 export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<DashboardUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(isAuthFlowDisabled);
   const { isPro, loading: subscriptionLoading } = useSubscription();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('tasks');
@@ -117,19 +124,32 @@ export default function Dashboard() {
 
   // Auth listener
   useEffect(() => {
+    if (isAuthFlowDisabled) {
+      setUser(null);
+      setIsDemoMode(true);
+      setAuthLoading(false);
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsDemoMode(!session?.user);
       setAuthLoading(false);
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setIsDemoMode(!session?.user);
       setAuthLoading(false);
     });
     return () => subscription.unsubscribe();
-  }, [handleNewSession]);
+  }, []);
 
   // Load sessions from DB
   useEffect(() => {
+    if (isAuthFlowDisabled || isDemoMode) {
+      setSessionsLoading(false);
+      return;
+    }
     if (!user) { setSessionsLoading(false); return; }
     const loadSessions = async () => {
       setSessionsLoading(true);
@@ -149,7 +169,7 @@ export default function Dashboard() {
       setSessionsLoading(false);
     };
     loadSessions();
-  }, [user]);
+  }, [user, isDemoMode]);
 
   // Keyboard shortcut: Ctrl+K = new session
   useEffect(() => {
@@ -165,7 +185,7 @@ export default function Dashboard() {
 
   // Real event logs instead of fake ones
   useEffect(() => {
-    if (!user) return;
+    if (!user || isDemoMode) return;
     const interval = setInterval(() => {
       if (!isLoading && Math.random() > 0.9) {
         const realLogs = [
@@ -178,7 +198,7 @@ export default function Dashboard() {
       }
     }, 6000);
     return () => clearInterval(interval);
-  }, [isLoading, user, addLog]);
+  }, [isLoading, user, isDemoMode, addLog]);
 
   const extractCodeForPreview = (text: string) => {
     if (!text) return;
@@ -200,7 +220,7 @@ export default function Dashboard() {
   };
 
   const saveMessageToDB = async (sessionId: string, role: string, content: string) => {
-    if (!user) return;
+    if (isAuthFlowDisabled || isDemoMode || !user) return;
     await supabase.from('chat_messages').insert({
       session_id: sessionId,
       user_id: user.id,
@@ -210,7 +230,7 @@ export default function Dashboard() {
   };
 
   const createSessionInDB = async (title: string): Promise<string | null> => {
-    if (!user) return null;
+    if (isAuthFlowDisabled || isDemoMode || !user) return null;
     const { data } = await supabase.from('chat_sessions').insert({
       user_id: user.id,
       title: title.substring(0, 40),
@@ -219,13 +239,14 @@ export default function Dashboard() {
   };
 
   const updateSessionTitle = async (sessionId: string, title: string) => {
+    if (isAuthFlowDisabled || isDemoMode) return;
     const trimmed = title.substring(0, 40);
     await supabase.from('chat_sessions').update({ title: trimmed, updated_at: new Date().toISOString() }).eq('id', sessionId);
     setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: trimmed } : s));
   };
 
   const uploadAttachments = async (files: Attachment[]): Promise<string[]> => {
-    if (!user) return [];
+    if (isAuthFlowDisabled || isDemoMode || !user) return [];
     const urls: string[] = [];
     for (const att of files) {
       if (!att.file) continue;
@@ -247,8 +268,8 @@ export default function Dashboard() {
   const callAIStreaming = async (msgs: Message[], systemOverride?: string): Promise<string> => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const url = `https://${projectId}.supabase.co/functions/v1/chat`;
-    const { data: { session } } = await supabase.auth.getSession();
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = isAuthFlowDisabled ? null : (await supabase.auth.getSession()).data.session;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -484,6 +505,7 @@ export default function Dashboard() {
   };
 
   const loadSession = async (session: Session) => {
+    if (isAuthFlowDisabled || isDemoMode) return;
     setActiveSessionId(session.id);
     setCurrentView('tasks');
     addLog(`[SYSTEM] Načítavam reláciu...`);
@@ -501,6 +523,7 @@ export default function Dashboard() {
   };
 
   const deleteSession = async (sessionId: string) => {
+    if (isAuthFlowDisabled || isDemoMode) return;
     await supabase.from('chat_sessions').delete().eq('id', sessionId);
     setSessions(prev => prev.filter(s => s.id !== sessionId));
     if (activeSessionId === sessionId) {
@@ -511,15 +534,21 @@ export default function Dashboard() {
   };
 
   const renameSession = async (sessionId: string, newTitle: string) => {
+    if (isAuthFlowDisabled || isDemoMode) return;
     await updateSessionTitle(sessionId, newTitle);
     showToast('Relácia premenovaná', 'success');
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (!isAuthFlowDisabled) {
+      await supabase.auth.signOut();
+    }
     setMessages([]);
     setSessions([]);
     setActiveSessionId(null);
+    if (isAuthFlowDisabled) {
+      showToast('Guest session reset', 'info');
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -623,9 +652,8 @@ export default function Dashboard() {
     );
   }
 
-  if (!user) {
-    return <LoginScreen />;
-  }
+  const dashboardStatusLabel = isDemoMode ? "Demo/Admin Mode" : "Authenticated";
+  const effectiveUser = isDemoMode ? null : user;
 
   const tokenCount = messages.length > 0 ? (8.1 + messages.length * 0.3).toFixed(1) : '8.1';
 
@@ -776,8 +804,9 @@ export default function Dashboard() {
                 onRenameSession={renameSession}
                 hasPreviewCode={!!latestGeneratedCode}
                 onOpenSettings={() => { setShowSettings(true); setMobileMenuOpen(false); }}
-                userEmail={user.email}
-                onLogout={handleLogout}
+                userEmail={effectiveUser?.email}
+                onLogout={isAuthFlowDisabled || isDemoMode ? undefined : handleLogout}
+                isDemoMode={isDemoMode}
                 sessionsLoading={sessionsLoading}
               />
             </motion.div>
@@ -798,13 +827,31 @@ export default function Dashboard() {
           onRenameSession={renameSession}
           hasPreviewCode={!!latestGeneratedCode}
           onOpenSettings={() => setShowSettings(true)}
-          userEmail={user.email}
-          onLogout={handleLogout}
+          userEmail={effectiveUser?.email}
+          onLogout={isAuthFlowDisabled || isDemoMode ? undefined : handleLogout}
+          isDemoMode={isDemoMode}
           sessionsLoading={sessionsLoading}
         />
       </div>
 
       <main className="flex-1 flex flex-col relative overflow-hidden pb-16 lg:pb-0">
+        <div className="border-b border-[#273043] bg-[#11141b]/95 px-5 py-3 backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#9aa7bd]">Builder Dashboard</p>
+              <p className="text-sm text-[#e9edf5]">Direct admin workspace</p>
+            </div>
+            {isDemoMode ? (
+              <span className="inline-flex items-center rounded-full border border-[#00d1b2]/35 bg-[#00d1b2]/10 px-3 py-1 text-xs font-medium text-[#9dfbe8]">
+                Demo/Admin Mode
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full border border-[#3aa0ff]/35 bg-[#3aa0ff]/10 px-3 py-1 text-xs font-medium text-[#b9dfff]">
+                {dashboardStatusLabel}
+              </span>
+            )}
+          </div>
+        </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
@@ -848,3 +895,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+

@@ -1,8 +1,29 @@
+import { Link, useNavigate } from 'react-router-dom';
 import { ReactNode, useState, useEffect, useMemo } from 'react';
 import {
-  Plus, LayoutGrid, ShieldAlert, Code2, Plug, Layout,
-  Settings, History, LogOut, Sun, Moon, Trash2, Search, Pencil, Check, X,
-  ScanSearch, Terminal
+  Plus,
+  LayoutGrid,
+  ShieldAlert,
+  Code2,
+  Plug,
+  Layout,
+  Settings,
+  History,
+  LogOut,
+  Sun,
+  Moon,
+  Trash2,
+  Search,
+  Pencil,
+  Check,
+  X,
+  ScanSearch,
+  Terminal,
+  LayoutDashboard,
+  PackageOpen,
+  FileText,
+  Calendar,
+  BookOpen
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -54,6 +75,7 @@ interface SidebarNavProps {
   userEmail?: string;
   onLogout?: () => void;
   sessionsLoading?: boolean;
+  isDemoMode?: boolean;
 }
 
 function groupByDate(sessions: Session[]): Record<string, Session[]> {
@@ -89,12 +111,13 @@ function groupByDate(sessions: Session[]): Record<string, Session[]> {
 export default function SidebarNav({
   currentView, onViewChange, onNewSession,
   sessions, activeSessionId, onLoadSession, onDeleteSession, onRenameSession,
-  hasPreviewCode, onOpenSettings, userEmail, onLogout, sessionsLoading
+  hasPreviewCode, onOpenSettings, userEmail, onLogout, sessionsLoading, isDemoMode
 }: SidebarNavProps) {
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
@@ -138,14 +161,114 @@ export default function SidebarNav({
           <Plus size={18} /> Nová Relácia
         </button>
 
-        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-2 pb-1">Delivery Pipeline</p>
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-2 pb-1">Main</p>
+        <SidebarItem
+          icon={<LayoutDashboard size={18} />}
+          label="Dashboard"
+          active={currentView === 'tasks'}
+          onClick={() => onViewChange('tasks')}
+        />
+        <SidebarItem
+          icon={<Layout size={18} />}
+          label="Builder"
+          active={currentView === 'generator'}
+          onClick={() => onViewChange('generator')}
+        />
+        <SidebarItem
+          icon={<PackageOpen size={18} />}
+          label="Components"
+          active={currentView === 'files'}
+          onClick={() => onViewChange('files')}
+        />
+        <SidebarItem
+          icon={<LayoutGrid size={18} />}
+          label="Preview"
+          active={currentView === 'preview'}
+          onClick={() => onViewChange('preview')}
+          indicator={hasPreviewCode}
+        />
+        <SidebarItem
+          icon={<ScanSearch size={18} />}
+          label="Projects"
+          active={currentView === 'connectors'}
+          onClick={() => onViewChange('connectors')}
+        />
 
-        <SidebarItem icon={<LayoutGrid size={18} />} label="Discovery & Setup" active={currentView === 'tasks'} onClick={() => onViewChange('tasks')} />
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">BlogMagica</p>
+        <Link
+          to="/blogmagica"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <LayoutGrid size={18} />
+          Articles
+        </Link>
+        <Link
+          to="/blogmagica/new"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <FileText size={18} />
+          New Article
+        </Link>
+        <Link
+          to="/blogmagica/seo"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <BookOpen size={18} />
+          SEO Briefs
+        </Link>
+        <Link
+          to="/blogmagica/drafts"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <FileText size={18} />
+          Drafts
+        </Link>
+        <Link
+          to="/blogmagica/published"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <BookOpen size={18} />
+          Published
+        </Link>
+        <Link
+          to="/blogmagica/calendar"
+          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <Calendar size={18} />
+          Content Calendar
+        </Link>
+
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">System</p>
+        <button
+          onClick={() => onOpenSettings()}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+            currentView === 'settings'
+              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
+              : 'text-sidebar-foreground hover:bg-accent hover:text-foreground'
+          }`}
+        >
+          <Settings size={18} />
+          <span className="flex-1 text-left">Settings</span>
+        </button>
+        <button
+          onClick={() => navigate('/privacy')}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <FileText size={18} />
+          <span className="flex-1 text-left">Docs</span>
+        </button>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+        >
+          <ScanSearch size={18} />
+          <span className="flex-1 text-left">Diagnostics</span>
+        </button>
+
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest px-3 pt-6 pb-1">Legacy Tools</p>
         <SidebarItem icon={<ShieldAlert size={18} />} label="Brief & Requirements" active={currentView === 'files'} onClick={() => onViewChange('files')} />
-        <SidebarItem icon={<Plug size={18} />} label="Repo & Env" active={currentView === 'connectors'} status="online" onClick={() => onViewChange('connectors')} />
         <SidebarItem icon={<Code2 size={18} />} label="Blueprint & Orchestration" active={currentView === 'skills'} onClick={() => onViewChange('skills')} />
-        <SidebarItem icon={<Layout size={18} />} label="Preview & Test" active={currentView === 'preview'} indicator={hasPreviewCode} onClick={() => onViewChange('preview')} />
-        <SidebarItem icon={<ScanSearch size={18} />} label="Analyzátor Logov" active={currentView === 'analyzer'} onClick={() => onViewChange('analyzer')} />
+        <SidebarItem icon={<Terminal size={18} />} label="Analyzátor Logov" active={currentView === 'analyzer'} onClick={() => onViewChange('analyzer')} />
         <SidebarItem icon={<Terminal size={18} />} label="Generátor Kódu" active={currentView === 'generator'} onClick={() => onViewChange('generator')} />
 
         {/* Session search */}
@@ -261,17 +384,24 @@ export default function SidebarNav({
           onClick={onOpenSettings}
           className="flex items-center justify-between p-2 rounded-xl hover:bg-accent transition-colors cursor-pointer w-full"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-              {userEmail ? userEmail[0].toUpperCase() : 'U'}
-            </div>
+          {isDemoMode ? (
             <div className="text-left">
-              <div className="text-sm font-medium text-foreground truncate max-w-[160px]">
-                {userEmail || 'Používateľ'}
-              </div>
-              <div className="text-[11px] text-success">Online</div>
+              <div className="text-sm font-medium text-foreground">Demo/Admin Mode</div>
+              <div className="text-[11px] text-muted-foreground">Guest workspace active</div>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                {userEmail ? userEmail[0].toUpperCase() : 'U'}
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-medium text-foreground truncate max-w-[160px]">
+                  {userEmail || 'Používateľ'}
+                </div>
+                <div className="text-[11px] text-success">Online</div>
+              </div>
+            </div>
+          )}
           <Settings size={16} className="text-muted-foreground" />
         </button>
       </div>

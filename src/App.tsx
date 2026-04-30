@@ -15,6 +15,14 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const LoginScreen = lazy(() => import("./components/LoginScreen"));
+const Blogmagica = lazy(() => import("./pages/blogmagica/BlogmagicaDashboard"));
+const BlogmagicaArticles = lazy(() => import("./pages/blogmagica/BlogmagicaArticles"));
+const BlogmagicaNew = lazy(() => import("./pages/blogmagica/BlogmagicaNew"));
+const BlogmagicaSeo = lazy(() => import("./pages/blogmagica/BlogmagicaSeo"));
+const BlogmagicaDrafts = lazy(() => import("./pages/blogmagica/BlogmagicaDrafts"));
+const BlogmagicaPublished = lazy(() => import("./pages/blogmagica/BlogmagicaPublished"));
+const BlogmagicaCalendar = lazy(() => import("./pages/blogmagica/BlogmagicaCalendar"));
 
 const queryClient = new QueryClient();
 
@@ -34,8 +42,17 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/auth/login" element={<LoginScreen />} />
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/blogmagica" element={<Blogmagica />} />
+              <Route path="/blogmagica/articles" element={<BlogmagicaArticles />} />
+              <Route path="/blogmagica/new" element={<BlogmagicaNew />} />
+              <Route path="/blogmagica/seo" element={<BlogmagicaSeo />} />
+              <Route path="/blogmagica/drafts" element={<BlogmagicaDrafts />} />
+              <Route path="/blogmagica/published" element={<BlogmagicaPublished />} />
+              <Route path="/blogmagica/calendar" element={<BlogmagicaCalendar />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
