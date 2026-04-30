@@ -27,3 +27,9 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Test and local tool artifacts
+playwright-report/
+test-results/
+supabase/.temp/
+tmp/
