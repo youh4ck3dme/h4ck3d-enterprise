@@ -12,6 +12,7 @@
     "wp:bridge:sync-theme": "node tools/wp-atomic-bridge.mjs sync-theme",
     "wp:bridge:publish-parts": "node tools/wp-atomic-bridge.mjs publish-parts",
     "wp:bridge:smoke-rest": "node tools/wp-atomic-bridge.mjs smoke-rest",
+    "wp:lab:setup": "powershell -ExecutionPolicy Bypass -File ./setup-lab.ps1",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",

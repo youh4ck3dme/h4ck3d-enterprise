@@ -22,7 +22,19 @@ This lab connects the Vite/React builder workflow with a WordPress Full Site Edi
 
 ## Local Run
 
-From this directory:
+From the repository root:
+
+```powershell
+npm run wp:lab:setup
+```
+
+For a full local reset, including Docker volumes:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\setup-lab.ps1 -ResetVolumes
+```
+
+Or from this directory:
 
 ```powershell
 docker compose up -d

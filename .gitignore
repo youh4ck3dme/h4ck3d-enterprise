@@ -33,3 +33,10 @@ playwright-report/
 test-results/
 supabase/.temp/
 tmp/
+
+# Local WordPress lab runtime files. Keep the atomic-lab theme tracked.
+experiments/atomic-wordpress-lab/wp-content/index.php
+experiments/atomic-wordpress-lab/wp-content/plugins/
+experiments/atomic-wordpress-lab/wp-content/themes/index.php
+experiments/atomic-wordpress-lab/wp-content/themes/twenty*/
+experiments/atomic-wordpress-lab/wp-content/uploads/
