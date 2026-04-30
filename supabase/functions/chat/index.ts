@@ -5,7 +5,6 @@ interface DenoNamespace {
 }
 declare const Deno: DenoNamespace;
 
-// @ts-expect-error: Deno specific import
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -35,6 +34,38 @@ GENERATION RULES:
 
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const DEFAULT_MISTRAL_MODEL = "mistral-small-latest";
+const DEFAULT_MISTRAL_JSON_MODEL = "mistral-large-latest";
+
+const ATOMIC_BUILDER_SYSTEM_PROMPT = `You are an automated code-generation API. Your ONLY purpose is to output a raw, strictly valid JSON object.
+You are NOT a conversational assistant. Do NOT output greetings, explanations, tutorials, markdown formatting outside of the JSON object, or any text before or after the JSON.
+
+CRITICAL RULES:
+1. ONLY return valid JSON. If you return anything else, the system will reject the response.
+2. The HTML in "partials" must be strictly WordPress-safe: no <html>, <head>, <body>, <script>, <style>, <iframe>, <form>, or <input> tags.
+3. Do not use inline event handlers, javascript: URLs, shell commands, deploy commands, or destructive instructions.
+4. ALL CSS classes used in the React/HTML partials MUST exist in the "cssManifest" output.
+5. Do not invent Tailwind classes that are not covered by "cssManifest".
+6. Follow the Atomic Design constraints provided by the user.
+
+OUTPUT CONTRACT:
+Respond EXACTLY as one JSON object matching this shape:
+{
+  "warnings": ["Array of strings if you had to skip or alter something, otherwise empty"],
+  "atomicPlan": { "atoms": [], "molecules": [], "sections": [] },
+  "reactComponent": "String containing the full React TSX component code",
+  "partials": {
+    "header": "String containing WordPress-safe HTML",
+    "hero": "String containing WordPress-safe HTML",
+    "features": "String containing WordPress-safe HTML",
+    "pricing": "String containing WordPress-safe HTML",
+    "faq": "String containing WordPress-safe HTML",
+    "finalCta": "String containing WordPress-safe HTML",
+    "footer": "String containing WordPress-safe HTML"
+  },
+  "cssManifest": "String containing raw CSS variables and classes",
+  "themeJson": { "version": 2, "settings": {} },
+  "jsonSchema": { "type": "object", "properties": {} }
+}`;
 
 type ChatMessage = {
   role: string;
@@ -81,6 +112,30 @@ function normalizeMistralModel(rawModel: unknown): string {
   }
 
   return providerAgnostic;
+}
+
+function normalizeMistralJsonModel(rawModel: unknown): string {
+  const normalized = normalizeMistralModel(rawModel);
+  if (normalized === DEFAULT_MISTRAL_MODEL) {
+    return DEFAULT_MISTRAL_JSON_MODEL;
+  }
+  return normalized;
+}
+
+function cleanJsonText(rawText: string): string {
+  return rawText
+    .trim()
+    .replace(/^```(?:json|JSON)?\s*/u, "")
+    .replace(/\s*```$/u, "")
+    .trim();
+}
+
+function parseJsonObject(rawText: string): Record<string, unknown> {
+  const parsed = JSON.parse(cleanJsonText(rawText));
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("AI response was not a JSON object");
+  }
+  return parsed as Record<string, unknown>;
 }
 
 function parseCsvEnv(value: string | undefined): string[] | undefined {
@@ -141,7 +196,16 @@ serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { messages, prompt, systemOverride, model } = body;
+    const { messages, prompt, systemOverride, model, jsonMode, outputMode, responseFormat } = body;
+    const responseFormatType =
+      responseFormat && typeof responseFormat === "object" && !Array.isArray(responseFormat)
+        ? (responseFormat as { type?: unknown }).type
+        : undefined;
+    const wantsJsonObject =
+      jsonMode === true ||
+      outputMode === "atomic-builder" ||
+      responseFormat === "json_object" ||
+      responseFormatType === "json_object";
 
     let conversationMessages: ChatMessage[];
 
@@ -165,13 +229,15 @@ serve(async (req: Request) => {
       });
     }
 
-    const systemPrompt = systemOverride
-      ? ENTERPRISE_PROMPT + "\n" + systemOverride
-      : ENTERPRISE_PROMPT;
+    const systemPrompt = wantsJsonObject
+      ? `${ATOMIC_BUILDER_SYSTEM_PROMPT}${systemOverride ? `\n\nUSER-SPECIFIC CONSTRAINTS:\n${systemOverride}` : ""}`
+      : systemOverride
+        ? ENTERPRISE_PROMPT + "\n" + systemOverride
+        : ENTERPRISE_PROMPT;
 
     const MISTRAL_API_KEY = Deno.env.get("MISTRAL_API_KEY");
     if (MISTRAL_API_KEY) {
-      const selectedMistralModel = normalizeMistralModel(model);
+      const selectedMistralModel = wantsJsonObject ? normalizeMistralJsonModel(model) : normalizeMistralModel(model);
       const mistralMessages = [
         { role: "system", content: systemPrompt },
         ...conversationMessages.map((message) => ({
@@ -180,17 +246,24 @@ serve(async (req: Request) => {
         })),
       ];
 
+      const mistralPayload: Record<string, unknown> = {
+        model: selectedMistralModel,
+        stream: !wantsJsonObject,
+        temperature: wantsJsonObject ? 0.2 : undefined,
+        messages: mistralMessages,
+      };
+
+      if (wantsJsonObject) {
+        mistralPayload.response_format = { type: "json_object" };
+      }
+
       const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${MISTRAL_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: selectedMistralModel,
-          stream: true,
-          messages: mistralMessages,
-        }),
+        body: JSON.stringify(mistralPayload),
       });
 
       if (!response.ok) {
@@ -212,6 +285,34 @@ serve(async (req: Request) => {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      if (wantsJsonObject) {
+        const result = await response.json();
+        const rawContent = result?.choices?.[0]?.message?.content;
+        if (typeof rawContent !== "string" || rawContent.trim().length === 0) {
+          return new Response(JSON.stringify({ error: "Mistral returned empty JSON content" }), {
+            status: 502,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        try {
+          const parsed = parseJsonObject(rawContent);
+          return new Response(JSON.stringify(parsed), {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+              "Cache-Control": "no-store",
+            },
+          });
+        } catch (parseError) {
+          console.error("Mistral JSON parse error:", parseError instanceof Error ? parseError.message : "unknown");
+          return new Response(JSON.stringify({ error: "Mistral returned invalid JSON contract" }), {
+            status: 502,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
 
       return new Response(response.body, {
