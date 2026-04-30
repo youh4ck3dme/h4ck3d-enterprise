@@ -171,20 +171,20 @@ export default function SidebarNav({
         <SidebarItem
           icon={<Layout size={18} />}
           label="Builder"
-          active={currentView === 'generator'}
-          onClick={() => onViewChange('generator')}
+          active={currentView === 'builder'}
+          onClick={() => navigate('/builder')}
         />
         <SidebarItem
           icon={<PackageOpen size={18} />}
           label="Components"
-          active={currentView === 'files'}
-          onClick={() => onViewChange('files')}
+          active={currentView === 'components'}
+          onClick={() => navigate('/builder/components')}
         />
         <SidebarItem
           icon={<LayoutGrid size={18} />}
           label="Preview"
-          active={currentView === 'preview'}
-          onClick={() => onViewChange('preview')}
+          active={currentView === 'builder-preview'}
+          onClick={() => navigate('/builder/preview')}
           indicator={hasPreviewCode}
         />
         <SidebarItem

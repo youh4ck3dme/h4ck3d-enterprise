@@ -23,6 +23,18 @@ vi.mock("./pages/Dashboard", () => ({
   default: () => <div>Builder workspace root</div>,
 }));
 
+vi.mock("./pages/builder/BuilderPage", () => ({
+  default: () => <div>Four prompt builder workflow</div>,
+}));
+
+vi.mock("./pages/builder/BuilderComponentsPage", () => ({
+  default: () => <div>Builder components route</div>,
+}));
+
+vi.mock("./pages/builder/BuilderPreviewPage", () => ({
+  default: () => <div>Builder preview route</div>,
+}));
+
 vi.mock("./pages/blogmagica/BlogmagicaDashboard", () => ({
   default: () => <div>Blogmagica section</div>,
 }));
@@ -88,8 +100,23 @@ describe("App routing entry", () => {
     navigateTo("/");
     render(<App />);
 
-    expect(await screen.findByText("Builder workspace root")).toBeInTheDocument();
+    expect(await screen.findByText("Four prompt builder workflow")).toBeInTheDocument();
     expect(screen.queryByText("Auth screen")).not.toBeInTheDocument();
+  });
+
+  it("renders builder workflow routes", async () => {
+    const routes = [
+      ["/builder", "Four prompt builder workflow"],
+      ["/builder/components", "Builder components route"],
+      ["/builder/preview", "Builder preview route"],
+    ] as const;
+
+    for (const [path, text] of routes) {
+      cleanup();
+      navigateTo(path);
+      render(<App />);
+      expect(await screen.findByText(text)).toBeInTheDocument();
+    }
   });
 
   it("keeps auth flow accessible via dedicated auth route", async () => {

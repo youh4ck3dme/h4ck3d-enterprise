@@ -23,6 +23,9 @@ const BlogmagicaSeo = lazy(() => import("./pages/blogmagica/BlogmagicaSeo"));
 const BlogmagicaDrafts = lazy(() => import("./pages/blogmagica/BlogmagicaDrafts"));
 const BlogmagicaPublished = lazy(() => import("./pages/blogmagica/BlogmagicaPublished"));
 const BlogmagicaCalendar = lazy(() => import("./pages/blogmagica/BlogmagicaCalendar"));
+const BuilderPage = lazy(() => import("./pages/builder/BuilderPage"));
+const BuilderComponentsPage = lazy(() => import("./pages/builder/BuilderComponentsPage"));
+const BuilderPreviewPage = lazy(() => import("./pages/builder/BuilderPreviewPage"));
 
 const queryClient = new QueryClient();
 
@@ -42,8 +45,11 @@ export default function App() {
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<BuilderPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/builder" element={<BuilderPage />} />
+              <Route path="/builder/components" element={<BuilderComponentsPage />} />
+              <Route path="/builder/preview" element={<BuilderPreviewPage />} />
               <Route path="/auth/login" element={<LoginScreen />} />
               <Route path="/landing" element={<LandingPage />} />
               <Route path="/blogmagica" element={<Blogmagica />} />
