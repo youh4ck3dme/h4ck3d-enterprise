@@ -13,10 +13,9 @@ test.describe('Builder workspace E2E', () => {
 
     await page.getByRole('button', { name: /Generovať komponenty/i }).click();
 
-    await expect(page.getByText(/Výstup je lokálny deterministic draft/i).first()).toBeVisible();
-    await expect(page.getByText(/Atomic plan:/i)).toBeVisible();
-    await expect(page.getByText(/Landing page pre PWA obchod s kávou/i).first()).toBeVisible();
     await expect(page.getByTitle('Live Preview')).toBeVisible();
+    await expect(page.getByText(/Atomic plan:/i)).toBeVisible();
+    await expect(page.getByLabel('generated output')).toContainText('Landing page pre PWA obchod s kávou');
     await page.getByRole('button', { name: 'Mobile preview' }).click();
     await expect(page.getByRole('button', { name: 'Mobile preview' })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('preview-device-frame')).toHaveCSS('width', '375px');

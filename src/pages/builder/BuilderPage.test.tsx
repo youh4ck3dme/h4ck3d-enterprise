@@ -1,8 +1,16 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import BuilderPage from "./BuilderPage";
+
+vi.mock("@/lib/builder-ai", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/builder-ai")>("@/lib/builder-ai");
+  return {
+    ...actual,
+    getBuilderGatewayConfig: () => null,
+  };
+});
 
 function renderBuilder() {
   return render(

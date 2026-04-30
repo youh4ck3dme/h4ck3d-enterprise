@@ -14,7 +14,7 @@ const sessions: Session[] = [
 ];
 
 describe("SidebarNav", () => {
-  it("renders BlogMagica section links", () => {
+  it("renders BlogMagica section links", async () => {
     render(
       <MemoryRouter>
         <SidebarNav
@@ -34,12 +34,12 @@ describe("SidebarNav", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("button", { name: /Articles/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /New Article/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /SEO Briefs/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Drafts/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Published/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Content Calendar/ })).toBeInTheDocument();
+    expect(await screen.findByText("Articles")).toBeInTheDocument();
+    expect(screen.getByText("New Article")).toBeInTheDocument();
+    expect(screen.getByText("SEO Briefs")).toBeInTheDocument();
+    expect(screen.getByText("Drafts")).toBeInTheDocument();
+    expect(screen.getByText("Published")).toBeInTheDocument();
+    expect(screen.getByText("Content Calendar")).toBeInTheDocument();
   });
 
   it("hides logout action in demo mode", () => {

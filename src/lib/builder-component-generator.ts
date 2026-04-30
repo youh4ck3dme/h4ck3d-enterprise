@@ -57,7 +57,7 @@ export type BuilderOutput = z.infer<typeof BuilderOutputSchema>;
 
 export const BuilderGenerationResultSchema = z.object({
   valid: z.boolean(),
-  source: z.literal("local-deterministic-draft"),
+  source: z.enum(["local-deterministic-draft", "remote-ai"]),
   status: z.enum([
     "ok",
     "missing-required-field",

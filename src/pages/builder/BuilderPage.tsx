@@ -8,8 +8,17 @@ import {
 } from "@/lib/builder-component-generator";
 import { buildWordPressThemeZip, WORDPRESS_THEME_SLUG } from "@/lib/wordpress-theme-zip";
 import IframePreview from "./IframePreview";
+import { ParsedAIOutput } from "@/schema/ai-output";
+import { requestAtomicBuilderOutput } from "@/lib/atomic-builder-client";
+import {
+  buildAtomicBuilderMessages,
+  buildAtomicBuilderSystemOverride,
+  getBuilderGatewayConfig,
+  getSelectedBuilderModel,
+} from "@/lib/builder-ai";
 
 type OutputMode = "react" | "html" | "wordpress" | "partials" | "css" | "theme" | "json";
+const BUILDER_REMOTE_TIMEOUT_MS = 6000;
 
 const TAB_LABELS: Array<{ id: OutputMode; label: string }> = [
   { id: "react", label: "React" },
@@ -58,6 +67,111 @@ function longRunningHint(elapsedSeconds: number): string | null {
   }
 
   return null;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function normalizeAiPartials(partials: Record<string, string>): Record<string, string> {
+  const normalized = { ...partials };
+  const values = Object.values(partials).filter((value) => value.trim().length > 0);
+
+  if (!normalized["Header.html"]) {
+    normalized["Header.html"] = partials.header || partials.hero || values[0] || "";
+  }
+
+  if (!normalized["Features.html"]) {
+    normalized["Features.html"] =
+      partials.features || partials.pricing || partials.faq || values.slice(1, -1).join("\n\n") || values[1] || normalized["Header.html"];
+  }
+
+  if (!normalized["Footer.html"]) {
+    normalized["Footer.html"] = partials.footer || partials.finalCta || partials.cta || values.at(-1) || normalized["Features.html"];
+  }
+
+  return normalized;
+}
+
+function buildHtmlDocument(title: string, cssManifest: string, partials: Record<string, string>): string {
+  return [
+    "<!doctype html>",
+    "<html>",
+    "  <head>",
+    '    <meta charset="utf-8" />',
+    '    <meta name="viewport" content="width=device-width, initial-scale=1" />',
+    `    <title>${title}</title>`,
+    "    <style>",
+    cssManifest,
+    "    </style>",
+    "  </head>",
+    '  <body class="bg-surface">',
+    partials["Header.html"],
+    partials["Features.html"],
+    partials["Footer.html"],
+    "  </body>",
+    "</html>",
+  ].join("\n");
+}
+
+function buildRemoteResult(payload: BuilderPromptInput, aiOutput: ParsedAIOutput): BuilderGenerationResult {
+  const localDraft = generateBuilderDraft(payload);
+  if (!localDraft.valid) {
+    return localDraft;
+  }
+
+  const partials = normalizeAiPartials(aiOutput.partials);
+  const wordpressHtml = [partials["Header.html"], partials["Features.html"], partials["Footer.html"]]
+    .filter((value) => value.trim().length > 0)
+    .join("\n\n");
+
+  return {
+    ...localDraft,
+    source: "remote-ai",
+    schema: {
+      ...localDraft.schema,
+      atomicPlan: {
+        atoms: aiOutput.atomicPlan.atoms.length > 0 ? aiOutput.atomicPlan.atoms : localDraft.schema.atomicPlan.atoms,
+        molecules:
+          aiOutput.atomicPlan.molecules.length > 0
+            ? aiOutput.atomicPlan.molecules
+            : localDraft.schema.atomicPlan.molecules,
+        organisms:
+          aiOutput.atomicPlan.sections.length > 0
+            ? aiOutput.atomicPlan.sections
+            : localDraft.schema.atomicPlan.organisms,
+      },
+      warnings: [
+        "Vystup bol vygenerovany cez AI gateway.",
+        ...aiOutput.warnings,
+      ],
+    },
+    outputs: {
+      ...localDraft.outputs,
+      react: aiOutput.reactComponent,
+      tailwindReact: aiOutput.reactComponent,
+      html: buildHtmlDocument(localDraft.schema.title, aiOutput.cssManifest, partials),
+      wordpressHtml,
+      partials,
+      cssManifest: aiOutput.cssManifest,
+      wordpressThemeJson: JSON.stringify(aiOutput.themeJson, null, 2),
+      json: JSON.stringify(aiOutput, null, 2),
+    },
+  };
+}
+
+function appendFallbackWarning(result: BuilderGenerationResult, message: string): BuilderGenerationResult {
+  if (!result.valid) {
+    return result;
+  }
+
+  return {
+    ...result,
+    schema: {
+      ...result.schema,
+      warnings: [...result.schema.warnings, message],
+    },
+  };
 }
 
 export default function BuilderPage() {
@@ -116,7 +230,7 @@ export default function BuilderPage() {
     });
   };
 
-  const onGenerate = () => {
+  const onGenerate = async () => {
     if (isGenerating) return;
     if (!validate()) return;
     setIsGenerating(true);
@@ -132,17 +246,51 @@ export default function BuilderPage() {
     };
     window.localStorage.setItem("builder-workflow:last-input", JSON.stringify(payload));
 
-    window.setTimeout(() => {
-      const draft = generateBuilderDraft(payload);
+    try {
+      const gatewayConfig = getBuilderGatewayConfig();
+
+      let draft: BuilderGenerationResult;
+      if (gatewayConfig) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), BUILDER_REMOTE_TIMEOUT_MS);
+
+        try {
+        const aiOutput = await requestAtomicBuilderOutput({
+          ...gatewayConfig,
+          messages: buildAtomicBuilderMessages(payload),
+          systemOverride: buildAtomicBuilderSystemOverride(payload),
+          model: getSelectedBuilderModel(),
+          signal: controller.signal,
+        });
+        draft = buildRemoteResult(payload, aiOutput);
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      } else {
+        await wait(350);
+        draft = generateBuilderDraft(payload);
+      }
+
       setResult(draft);
       setZipStatus("idle");
-      setIsGenerating(false);
-      setStartAt(null);
 
       if (draft.valid) {
         setActiveMode("react");
       }
-    }, 350);
+    } catch (error) {
+      await wait(350);
+      const message = error instanceof Error ? error.message : "AI gateway bola nedostupna.";
+      const fallbackDraft = appendFallbackWarning(
+        generateBuilderDraft(payload),
+        `AI gateway zlyhala, zobrazeny je bezpecny lokalny draft. Dovod: ${message}`,
+      );
+      setResult(fallbackDraft);
+      setZipStatus("idle");
+      setActiveMode("react");
+    } finally {
+      setIsGenerating(false);
+      setStartAt(null);
+    }
   };
 
   const onReset = () => {
@@ -300,7 +448,11 @@ export default function BuilderPage() {
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-black uppercase text-black">Výstup</h2>
               <p className="text-sm font-bold text-gray-700">
-                {result?.valid ? "Výstup je lokálny deterministic draft (pilotný režim)." : "Zatiaľ bez výsledku."}
+                {result?.valid
+                  ? result.source === "remote-ai"
+                    ? "Výstup bol vygenerovaný cez AI gateway."
+                    : "Výstup je lokálny deterministic draft (pilotný režim)."
+                  : "Zatiaľ bez výsledku."}
               </p>
             </div>
 

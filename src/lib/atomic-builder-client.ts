@@ -12,6 +12,7 @@ export type AtomicBuilderRequest = {
   messages: AtomicBuilderMessage[];
   systemOverride?: string;
   model?: string;
+  signal?: AbortSignal;
   fetchImpl?: typeof fetch;
 };
 
@@ -41,6 +42,7 @@ export async function requestAtomicBuilderOutput({
   messages,
   systemOverride,
   model,
+  signal,
   fetchImpl = fetch,
 }: AtomicBuilderRequest): Promise<ParsedAIOutput> {
   assertConfigured("Supabase URL", supabaseUrl);
@@ -48,6 +50,7 @@ export async function requestAtomicBuilderOutput({
 
   const response = await fetchImpl(`${supabaseUrl.replace(/\/$/, "")}/functions/v1/chat`, {
     method: "POST",
+    signal,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken || anonKey}`,
