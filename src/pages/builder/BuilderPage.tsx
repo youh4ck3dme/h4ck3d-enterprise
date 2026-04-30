@@ -7,6 +7,7 @@ import {
   generateBuilderDraft,
   validateBuilderPrompts,
 } from "@/lib/builder-component-generator";
+import { buildWordPressThemeZip, WORDPRESS_THEME_SLUG } from "@/lib/wordpress-theme-zip";
 
 type OutputMode = "react" | "html" | "wordpress" | "partials" | "css" | "theme" | "json";
 
@@ -93,6 +94,7 @@ export default function BuilderPage() {
   const [result, setResult] = useState<BuilderGenerationResult | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [activeMode, setActiveMode] = useState<OutputMode>("react");
+  const [zipStatus, setZipStatus] = useState<"idle" | "building" | "ready" | "error">("idle");
   const [copyStatus, setCopyStatus] = useState<Record<OutputMode, boolean>>({
     react: false,
     html: false,
@@ -156,6 +158,7 @@ export default function BuilderPage() {
     window.setTimeout(() => {
       const draft = generateBuilderDraft(payload);
       setResult(draft);
+      setZipStatus("idle");
       setIsGenerating(false);
       setStartAt(null);
 
@@ -172,6 +175,7 @@ export default function BuilderPage() {
     setStylePrompt("");
     setErrors([]);
     setResult(null);
+    setZipStatus("idle");
     clearCopyStatus();
   };
 
@@ -185,6 +189,21 @@ export default function BuilderPage() {
       }, 1400);
     } catch {
       setCopyStatus((prev) => ({ ...prev, [mode]: false }));
+    }
+  };
+
+  const onDownloadWordPressZip = async () => {
+    if (!result || !result.valid || zipStatus === "building") return;
+
+    try {
+      setZipStatus("building");
+      const { saveAs } = await import("file-saver");
+      const blob = await buildWordPressThemeZip(result);
+      saveAs(blob, `${WORDPRESS_THEME_SLUG}.zip`);
+      setZipStatus("ready");
+      window.setTimeout(() => setZipStatus("idle"), 1800);
+    } catch {
+      setZipStatus("error");
     }
   };
 
@@ -338,6 +357,27 @@ export default function BuilderPage() {
 
                 <div className="mt-5">
                   <h3 className="mb-2 text-sm font-black uppercase text-black">Export</h3>
+                  <div className="mb-4 border-4 border-black bg-white p-3">
+                    <p className="text-xs font-black uppercase text-black">WordPress FSE ZIP</p>
+                    <p className="mt-1 text-xs font-bold text-gray-700">
+                      Stiahne kompletnú tému so súbormi style.css, theme.json, templates/index.html a parts/*.html.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onDownloadWordPressZip}
+                      disabled={!result.valid || zipStatus === "building"}
+                      aria-label="Stiahnuť WordPress FSE ZIP"
+                      className="mt-3 inline-flex items-center justify-center border-4 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {zipStatus === "building"
+                        ? "Balím ZIP…"
+                        : zipStatus === "ready"
+                          ? "ZIP pripravený"
+                          : zipStatus === "error"
+                            ? "ZIP zlyhal"
+                            : "Stiahnuť pre WordPress (FSE)"}
+                    </button>
+                  </div>
                   <div className="mb-4 flex flex-wrap gap-2">
                     {TAB_LABELS.map((tab) => (
                       <button

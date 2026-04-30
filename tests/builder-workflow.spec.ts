@@ -16,6 +16,7 @@ test.describe('Builder workspace E2E', () => {
     await expect(page.getByText(/Výstup je lokálny deterministic draft/i).first()).toBeVisible();
     await expect(page.getByText(/Atomic plan:/i)).toBeVisible();
     await expect(page.getByText(/Landing page pre PWA obchod s kávou/i).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Stiahnuť WordPress FSE ZIP' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Partial Files' }).click();
     await expect(page.getByLabel('generated output')).toContainText('Header.html');

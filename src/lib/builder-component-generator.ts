@@ -489,7 +489,7 @@ function renderWordPressSafeHtml(title: string, sections: BuilderSection[]): str
           <h2 class="${WORDPRESS_CLASS_PREFIX}heading ${WORDPRESS_CLASS_PREFIX}text-primary">${escapeHtml(section.headline)}</h2>
           <p class="${WORDPRESS_CLASS_PREFIX}text ${WORDPRESS_CLASS_PREFIX}text-muted">${escapeHtml(section.subheadline)}</p>
           ${section.items?.length ? `<ul>${section.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : ""}
-          ${section.primaryCta ? `<p><a href="#" class="${WORDPRESS_CLASS_PREFIX}cta">${escapeHtml(section.primaryCta)}</a></p>` : ""}
+          ${section.primaryCta ? `<p><a href="#" class="${WORDPRESS_CLASS_PREFIX}button">${escapeHtml(section.primaryCta)}</a></p>` : ""}
         </section>`.trim(),
     )
     .join("\n");

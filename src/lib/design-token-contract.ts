@@ -62,7 +62,12 @@ ${typeVars}
 .gb-wp-text-muted { color: var(--gb-muted); }
 .gb-wp-border-ink { border-color: var(--gb-ink); }
 .gb-wp-p-md { padding: var(--gb-space-md); }
-.gb-wp-card { background: var(--gb-surface-raised); border: 4px solid var(--gb-ink); padding: var(--gb-space-md); }`;
+.gb-wp-title { color: var(--gb-primary); font-family: var(--gb-font-display); font-size: var(--gb-text-3xl); font-weight: 900; }
+.gb-wp-heading { color: var(--gb-primary); font-family: var(--gb-font-display); font-size: var(--gb-text-xl); font-weight: 900; }
+.gb-wp-text { color: var(--gb-ink); font-family: var(--gb-font-sans); line-height: 1.65; }
+.gb-wp-button { display: inline-flex; align-items: center; border: 4px solid var(--gb-ink); background: var(--gb-primary); color: white; padding: var(--gb-space-sm) var(--gb-space-md); font-weight: 900; text-transform: uppercase; text-decoration: none; }
+.gb-wp-card { background: var(--gb-surface-raised); border: 4px solid var(--gb-ink); padding: var(--gb-space-md); margin-block: var(--gb-space-md); }
+.gb-wp-hero, .gb-wp-feature-grid, .gb-wp-benefits, .gb-wp-pricing, .gb-wp-faq, .gb-wp-cta, .gb-wp-testimonial, .gb-wp-checklist, .gb-wp-comparison-block { display: grid; gap: var(--gb-space-md); }`;
 }
 
 export function buildWordPressThemeJson(): string {

@@ -61,6 +61,7 @@ describe("BuilderPage", () => {
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "WordPress Safe HTML" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "JSON" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Stiahnuť WordPress FSE ZIP" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Skopírovať" })).toBeInTheDocument();
   });
 });

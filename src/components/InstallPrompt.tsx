@@ -22,15 +22,18 @@ export default function InstallPrompt() {
       setShowBanner(true);
     };
 
-    window.addEventListener("beforeinstallprompt", handler);
-
-    // Track installation
-    window.addEventListener("appinstalled", () => {
+    const installedHandler = () => {
       setShowBanner(false);
       setDeferredPrompt(null);
-    });
+    };
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installedHandler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -72,7 +75,7 @@ export default function InstallPrompt() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-black text-sm uppercase tracking-wide mb-1">
-                Nainštalovať H4CK3D
+                Inštalovať Appku
               </h3>
               <p className="text-xs text-white/70 font-bold mb-3">
                 Pridajte si aplikáciu na plochu pre rýchlejší prístup a offline režim.
@@ -81,7 +84,7 @@ export default function InstallPrompt() {
                 onClick={handleInstall}
                 className="w-full py-3 bg-red-600 text-white font-black uppercase text-sm tracking-widest border-2 border-white hover:bg-white hover:text-black transition-all active:translate-y-0.5 min-h-[44px]"
               >
-                Inštalovať
+                Inštalovať Appku
               </button>
             </div>
           </div>
