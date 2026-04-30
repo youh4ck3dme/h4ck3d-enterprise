@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import BuilderShellLayout from "./BuilderShellLayout";
 import {
   BuilderPromptInput,
-  BuilderOutput,
   BuilderGenerationResult,
   generateBuilderDraft,
   validateBuilderPrompts,
 } from "@/lib/builder-component-generator";
 import { buildWordPressThemeZip, WORDPRESS_THEME_SLUG } from "@/lib/wordpress-theme-zip";
+import IframePreview from "./IframePreview";
 
 type OutputMode = "react" | "html" | "wordpress" | "partials" | "css" | "theme" | "json";
 
@@ -58,29 +58,6 @@ function longRunningHint(elapsedSeconds: number): string | null {
   }
 
   return null;
-}
-
-function previewFromSchema(schema: BuilderOutput) {
-  return (
-    <div className="space-y-4">
-      {schema.sections.map((section, index) => (
-        <section key={`${section.type}-${index}`} className="border-4 border-black bg-white p-4 shadow-[6px_6px_0px_0px_rgba(252,211,77,1)]">
-          <h2 className="text-lg font-black uppercase text-black">{section.headline}</h2>
-          <p className="mt-2 text-sm font-bold text-gray-700">{section.subheadline}</p>
-          {section.items?.length ? (
-            <ul className="mt-3 list-disc space-y-1 pl-5">
-              {section.items.map((item) => (
-                <li key={item} className="text-sm font-bold text-black">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {section.primaryCta ? <p className="mt-3 inline-block border-2 border-black bg-red-600 px-3 py-1 text-sm font-black uppercase text-white">{section.primaryCta}</p> : null}
-        </section>
-      ))}
-    </div>
-  );
 }
 
 export default function BuilderPage() {
@@ -350,8 +327,8 @@ export default function BuilderPage() {
 
                 <div className="mt-5">
                   <h3 className="text-sm font-black uppercase text-black">Live preview</h3>
-                  <div className="mt-3 max-h-64 overflow-auto border-4 border-black p-3">
-                    {previewFromSchema(result.schema)}
+                  <div className="mt-3">
+                    <IframePreview partials={result.outputs.partials} cssManifest={result.outputs.cssManifest} />
                   </div>
                 </div>
 

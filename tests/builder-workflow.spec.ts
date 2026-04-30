@@ -16,6 +16,10 @@ test.describe('Builder workspace E2E', () => {
     await expect(page.getByText(/Výstup je lokálny deterministic draft/i).first()).toBeVisible();
     await expect(page.getByText(/Atomic plan:/i)).toBeVisible();
     await expect(page.getByText(/Landing page pre PWA obchod s kávou/i).first()).toBeVisible();
+    await expect(page.getByTitle('Live Preview')).toBeVisible();
+    await page.getByRole('button', { name: 'Mobile preview' }).click();
+    await expect(page.getByRole('button', { name: 'Mobile preview' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('preview-device-frame')).toHaveCSS('width', '375px');
     await expect(page.getByRole('button', { name: 'Stiahnuť WordPress FSE ZIP' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Partial Files' }).click();

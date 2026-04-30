@@ -62,6 +62,10 @@ describe("BuilderPage", () => {
     expect(screen.getByRole("button", { name: "WordPress Safe HTML" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "JSON" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Stiahnuť WordPress FSE ZIP" })).toBeInTheDocument();
+    expect(screen.getByTitle("Live Preview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Desktop preview" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tablet preview" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mobile preview" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Skopírovať" })).toBeInTheDocument();
   });
 });
