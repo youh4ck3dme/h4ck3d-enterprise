@@ -43,13 +43,13 @@ docker compose up -d
 WordPress:
 
 ```txt
-http://localhost:8080
+http://localhost:8090
 ```
 
 WP Admin:
 
 ```txt
-http://localhost:8080/wp-admin/
+http://localhost:8090/wp-admin/
 ```
 
 Create local demo credentials during WP-CLI install. Do not commit real admin passwords.

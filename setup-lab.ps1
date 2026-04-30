@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$LabPath = "",
-  [string]$SiteUrl = "http://localhost:8080",
+  [string]$SiteUrl = "http://localhost:8090",
   [string]$SiteTitle = "Atomic Lab",
   [string]$AdminUser = "admin",
   [string]$AdminEmail = "admin@example.local",
@@ -138,14 +138,32 @@ function Wait-ForHttp {
   )
 
   for ($i = 1; $i -le $Attempts; $i++) {
-    try {
-      $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 10
-      if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
-        Write-Host "HTTP ready: $Url ($($response.StatusCode))"
-        return
+    $statusCode = $null
+    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+      $curlStatus = & curl.exe -s -o NUL -w "%{http_code}" --max-redirs 0 --connect-timeout 5 $Url
+      if ($LASTEXITCODE -eq 0 -and $curlStatus -match "^\d{3}$") {
+        $statusCode = [int]$curlStatus
       }
-    } catch {
-      if ($i -eq $Attempts) {
+    } else {
+      try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 10 -MaximumRedirection 0
+        $statusCode = [int]$response.StatusCode
+      } catch {
+        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
+          $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+      }
+    }
+
+    if ($statusCode -and $statusCode -ge 200 -and $statusCode -lt 500) {
+      Write-Host "HTTP ready: $Url ($statusCode)"
+      return
+    }
+
+    if ($i -eq $Attempts) {
+      if ($statusCode) {
+        throw "HTTP endpoint did not become ready: $Url (last status $statusCode)"
+      } else {
         throw "HTTP endpoint did not become ready: $Url"
       }
     }
@@ -208,6 +226,8 @@ function Initialize-WordPress {
     Write-Host "WordPress core is already installed."
   }
 
+  Invoke-WpCli option update siteurl $SiteUrl
+  Invoke-WpCli option update home $SiteUrl
   Invoke-WpCli theme activate atomic-lab
   Invoke-WpCli rewrite flush --hard
 }
